@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The nth member</title>
+<meta name="description" content="REVOTT's numerator: where each fixed Y's SFO is at any instant, the micronodes along every open edge, and the member's own journal.">
+<style>
+:root{
+  color-scheme: light;
+  --plane:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --line:#e1e0d9; --axis:#c3c2b7;
+  --accent:#2a78d6; --hot:#d24a2b; --node:#eb6834; --bar:#2a78d6; --cold:#c3c2b7;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --plane:#0d0d0d; --surface:#1a1a19;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --line:#2c2c2a; --axis:#383835;
+    --accent:#3987e5; --hot:#e0603f; --node:#d95926; --bar:#3987e5; --cold:#4a4a46;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --plane:#0d0d0d; --surface:#1a1a19;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --line:#2c2c2a; --axis:#383835;
+  --accent:#3987e5; --hot:#e0603f; --node:#d95926; --bar:#3987e5; --cold:#4a4a46;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:960px;margin:0 auto;padding:28px 16px}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+h2{font-size:14px;margin:0 0 4px}
+.sub{color:var(--ink-2);margin:0 0 18px;max-width:72ch}
+.note{color:var(--muted);font-size:12.5px;margin:0 0 12px;max-width:80ch}
+a{color:var(--accent)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+label{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+input,select{font:inherit;font-family:ui-monospace,monospace;padding:7px 9px;border:1px solid var(--axis);
+  border-radius:8px;background:var(--plane);color:var(--ink);max-width:100%}
+input[type=number]{width:120px}
+button{font:inherit;padding:7px 11px;border:1px solid var(--axis);border-radius:8px;background:var(--plane);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.tile{background:var(--surface);padding:12px 14px;min-width:0}
+.tile .k{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tile .v{font-size:16px;font-family:ui-monospace,monospace;margin-top:3px;letter-spacing:-.02em;overflow-wrap:anywhere}
+.tile .n{font-size:11.5px;color:var(--ink-2);margin-top:2px;overflow-wrap:anywhere}
+.edge{border-top:1px solid var(--line);padding:12px 0}
+.edge:first-of-type{border-top:0;padding-top:4px}
+.edge .h{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.kind{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:8px 0 6px}
+.prog i{display:block;height:100%;background:var(--node)}
+.rd{font-size:13px;color:var(--ink-2);margin:2px 0;overflow-wrap:anywhere}
+.rd b{color:var(--ink);font-weight:600}
+.strip{display:flex;align-items:flex-end;gap:1px;height:44px;margin:10px 0 4px;border-bottom:1px solid var(--axis)}
+.strip i{flex:1 1 0;min-width:1px;background:var(--cold);border-radius:1px 1px 0 0;cursor:default}
+.strip i.hot{background:var(--hot)}
+.strip i.null{background:transparent;border-bottom:2px dotted var(--muted)}
+.strip i.now{outline:1px solid var(--ink);outline-offset:0}
+.mn{font-size:12.5px;margin:6px 0 0;padding-left:0;list-style:none}
+.mn li{margin:3px 0;overflow-wrap:anywhere}
+.mn .d{margin-left:18px;color:var(--ink-2)}
+details summary{cursor:pointer;color:var(--accent);font-size:12.5px;margin-top:6px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td,th{text-align:left;padding:5px 8px 5px 0;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.tbl{overflow-x:auto}
+.joint{color:var(--hot);font-weight:600}
+.tag{display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:6px;background:var(--line);color:var(--ink-2)}
+.tag.p{background:var(--hot);color:#fff}
+.jr{max-height:640px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 14px;margin-top:10px;background:var(--plane)}
+.jr table{font-size:12px}
+.foot{color:var(--muted);font-size:12px;margin-top:22px;line-height:1.6}
+.muted{color:var(--muted)}
+@media (max-width:560px){ .strip{height:34px} input[type=datetime-local]{width:100%} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>The nth member</h1>
+<p class="sub">REVOTT's numerator, working on its own. Every fixed Y generates a 400-node, 704-edge SFO over X.
+This page locates any instant on that SFO — what fires, which edges are open and how far along, the sentences on
+the instant's line — and walks the <b>micronodes</b> along every open edge: granules of the trajectory, judged
+against the member's own history, refined where deemed relevant.</p>
+
+<div class="card bar">
+  <div><label for="y">Y — the instance</label><input type="number" id="y" step="0.01" min="-147.60" max="212.40"></div>
+  <div><label for="at">instant (UTC)</label><input type="datetime-local" id="at" step="60"></div>
+  <div><label for="g">granule</label>
+    <select id="g"><option>second</option><option>minute</option><option>hour</option><option selected>day</option>
+      <option>week</option><option>month</option><option>year</option></select></div>
+  <div><label>&nbsp;</label><button id="prev">← granule</button></div>
+  <div><label>&nbsp;</label><button id="next">granule →</button></div>
+  <div><label>&nbsp;</label><button id="now">now</button></div>
+</div>
+
+<div class="tiles" id="tiles"></div>
+
+<div class="card"><h2>Firing inside the granule</h2><div id="firing"></div></div>
+
+<div class="card">
+  <h2>Open edges — and the micronodes along them</h2>
+  <p class="note">Each edge is walked from its source to the instant in granules sized by its length (orders:
+    <span id="gbs"></span>). Every granule's relevant share is placed as a percentile in the member's own history of
+    granules that size; at or above the <span id="cut"></span>th it is deemed relevant (red) and refined to the next
+    granule down, to the day GDELT 1.0 can resolve. Dotted: no archive — NULL, never zero. Before 2013-04-01 the
+    member has no daily history, so micronodes start there.</p>
+  <div id="edges"></div>
+</div>
+
+<div class="card"><h2>The granule's line through the 400 × 400 grid</h2>
+  <p class="note">Every (Y, X) pair of SFO_BB values whose date falls inside the granule, read as «X» is being «Y».</p>
+  <div id="sent"></div></div>
+
+<div class="card"><h2>Ahead</h2><p class="note">Keys of this SFO within the horizon, and the eigen crossings beside them.</p>
+  <div id="ahead"></div></div>
+
+<div class="card"><h2>Eigen <span class="tag">a curiosity</span></h2>
+  <p class="note">Z = 200·Yp + 14160 — the diagonal Y = X, one value at a time, on the system's own stretched values.
+  Reported beside the primary readings, never in place of them.</p><div id="eigen"></div></div>
+
+<div class="card"><h2>The member's journal</h2>
+  <p class="note">Written unprompted after each refresh.</p>
+  <div class="bar"><div><label for="jsel">entry</label><select id="jsel"></select></div></div>
+  <div class="jr" id="jbody"><p class="muted">loading …</p></div></div>
+
+<div class="card"><h2>Standing orders — relevance</h2><div id="orders"></div></div>
+
+<p class="foot">
+  TNLDY = 14160 + 100·(Y + X) · date = 1969-11-07T11:28:41.739Z + TNLDY days.
+  Readings lead with each key's marking, then the apocalypse sequence (seal, trumpet, vial, horns), then any
+  derived sub-context; a key with no primary layer of its own carries the last preceding key's, marked so.
+  Percentiles are readings against the member's own history, never significance. NULL is never zero.
+  Relevant days link to <a href="https://nth-member.github.io/gdelt/">nth-member/gdelt</a> for that day's sources;
+  the field itself is at <a href="https://nth-member.github.io/revott/">nth-member/revott</a>.
+</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const DAY=86400000, ORIGIN=Date.UTC(1969,10,7,11,28,41,739);
+const G={second:1000,minute:60000,hour:3600000,day:DAY,week:7*DAY,month:30*DAY,year:365.2174*DAY};
+const GD={day:1,week:7,month:30}, FINER={month:"week",week:"day"};
+let S,R,O,XS,NODE,EDGES,refs={};
+
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const dateOf=(y,x)=>ORIGIN+(14160+100*(y+x))*DAY;
+const tnldy=t=>(t-ORIGIN)/DAY;
+const iso=t=>new Date(t).toISOString().slice(0,10);
+const stamp=t=>new Date(t).toISOString().slice(0,16).replace("T"," ");
+const g0=x=>+x.toFixed(4)+"";
+const rd=x=>esc(NODE[x].r);
+const gdelt=d=>"https://nth-member.github.io/gdelt/?date="+d;
+
+/* ---- the member's history ---- */
+const R0=()=>Date.parse(R.start+"T00:00:00Z");
+function dayIdx(t){return Math.floor((t-R0())/DAY);}
+function win(i0,w){
+  let rows=0,hits=0,present=0,nul=0;
+  for(let i=i0;i<i0+w;i++){
+    if(i<0||i>=R.rows.length){nul++;continue;}
+    if(R.rows[i]==null){nul++;continue;}
+    present++; rows+=R.rows[i]; hits+=R.hits[i];
+  }
+  return {i0,w,present,nul,share:rows?hits/rows:null};
+}
+function reference(w){
+  if(refs[w]) return refs[w];
+  const out=[];
+  for(let i=0;i+w<=R.rows.length;i+=w){const x=win(i,w); if(x.share!=null&&x.present>=Math.max(1,w>>1)) out.push(x.share);}
+  return refs[w]=out.sort((a,b)=>a-b);
+}
+function pct(ref,v){let lo=0,hi=ref.length;while(lo<hi){const m=(lo+hi)>>1; if(ref[m]<=v) lo=m+1; else hi=m;} return 100*lo/ref.length;}
+function granuleFor(span){for(const [g,lim] of O.granule_by_span_days) if(span<=lim) return g; return O.granule_by_span_days.at(-1)[0];}
+function walk(i0,i1,g){
+  const w=GD[g], ref=reference(w), out=[];
+  for(let i=i0;i<=i1;i+=w){
+    const x=win(i,Math.min(w,i1-i+1)); x.g=g;
+    x.pct=x.share==null?null:pct(ref,x.share);
+    x.rel=x.pct!=null&&x.pct>=O.relevant_percentile;
+    x.finer=x.rel&&FINER[g]?walk(i,i+x.w-1,FINER[g]):[];
+    out.push(x);
+  }
+  return out;
+}
+function relDays(ns){let o=[];for(const n of ns){if(n.g==="day"&&n.rel)o.push(n);o=o.concat(relDays(n.finer));}return o;}
+const idxDate=i=>iso(R0()+i*DAY);
+
+/* ---- introspection ---- */
+function read(){
+  const q=new URLSearchParams(location.search);
+  const y=+($("#y").value||q.get("y")||O.instances[0]);
+  const at=$("#at").value?Date.parse($("#at").value+"Z"):(q.get("at")?Date.parse(q.get("at")+"Z"):Date.now());
+  return {y,at,g:$("#g").value};
+}
+function sync(y,at,g){
+  $("#y").value=y.toFixed(2); $("#at").value=new Date(at).toISOString().slice(0,16); $("#g").value=g;
+  history.replaceState(null,"","?y="+y.toFixed(2)+"&at="+new Date(at).toISOString().slice(0,16)+"&g="+g);
+}
+function draw(){
+  const {y,at,g}=read(); sync(y,at,g);
+  const lo=at, hi=at+G[g], Z=tnldy(at), xNow=(Z-14160)/100-y;
+  const when={}; XS.forEach(x=>when[x]=dateOf(y,x));
+
+  const firing=XS.filter(x=>when[x]>=lo&&when[x]<hi);
+  const open=EDGES.filter(e=>when[e[0]]<=at&&at<when[e[1]])
+    .map(e=>({s:e[0],t:e[1],bb:e[2],a:when[e[0]],b:when[e[1]],p:(at-when[e[0]])/(when[e[1]]-when[e[0]])}))
+    .sort((u,v)=>(v.bb-u.bb)||(u.b-v.b));
+  const hz=at+O.horizon_days*DAY;
+  const ahead=XS.filter(x=>when[x]>=hi&&when[x]<hz).map(x=>[x,when[x]]);
+  const eAhead=XS.filter(x=>{const d=dateOf(x,x);return d>=hi&&d<hz;}).map(x=>[x,dateOf(x,x)]);
+  const yp=(Z-14160)/200, nxt=XS.find(x=>x>yp), prv=[...XS].reverse().find(x=>x<=yp);
+
+  // tiles
+  const nx=ahead[0];
+  $("#tiles").innerHTML=[
+    ["TNLDY",Z.toFixed(3),"at the instant"],
+    ["X on this SFO",xNow.toFixed(4),"where the instant falls"],
+    ["open edges",open.length,open.filter(e=>e.bb).length+" backbone"],
+    ["next key",nx?stamp(nx[1]):"—",nx?"X = "+g0(nx[0])+" · in "+((nx[1]-at)/DAY).toFixed(1)+" days":"none within "+O.horizon_days+" days"],
+    ["eigen Yp",yp.toFixed(4),"a curiosity"]
+  ].map(([k,v,n])=>'<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="n">'+esc(n)+'</div></div>').join("");
+
+  $("#firing").innerHTML=firing.length?firing.map(x=>'<div class="rd"><span class="mono">X = '+g0(x)+' · '+stamp(when[x])
+    +'</span> — <b>'+rd(x)+'</b></div>').join(""):'<p class="muted">No key of this SFO falls inside the granule.</p>';
+
+  // edges and micronodes
+  const walked={};
+  $("#edges").innerHTML=open.map(e=>{
+    const span=(e.b-e.a)/DAY, gr=granuleFor(span);
+    let h='<div class="edge"><div class="h"><span class="kind">'+(e.bb?"backbone":"long-range")+'</span>'
+      +'<span class="mono">'+g0(e.s)+' → '+g0(e.t)+'</span><span class="mono muted">'+iso(e.a)+' → '+iso(e.b)
+      +'</span><span class="mono">'+(100*e.p).toFixed(1)+'% along</span></div>'
+      +'<div class="prog"><i style="width:'+(100*e.p).toFixed(2)+'%"></i></div>'
+      +'<div class="rd">from <b>'+rd(e.s)+'</b></div><div class="rd">to <b>'+rd(e.t)+'</b></div>';
+    const key=e.s+"|"+gr;
+    if(walked[key]!=null){ return h+'<p class="note">Same micronodes as '+g0(e.s)+' → '+g0(walked[key])+' above; it differs only in its end.</p></div>'; }
+    walked[key]=e.t;
+    const i0=Math.max(0,dayIdx(e.a)), i1=Math.min(R.rows.length-1,dayIdx(at));
+    if(i1<0||i0>i1){ return h+'<p class="note">No micronodes in the member\'s history on this stretch.</p></div>'; }
+    const ns=walk(i0,i1,gr), judged=ns.filter(n=>n.pct!=null), rel=ns.filter(n=>n.rel);
+    const nul=ns.reduce((s,n)=>s+n.nul,0);
+    h+='<div class="strip" title="one bar per '+gr+'; height = percentile">'+ns.map((n,k)=>
+      '<i class="'+(n.pct==null?"null":(n.rel?"hot":""))+(k===ns.length-1?" now":"")+'" style="height:'
+      +(n.pct==null?100:Math.max(3,n.pct))+'%" title="'+gr+' from '+idxDate(n.i0)+(n.pct==null?' — NULL':' — '
+      +(100*n.share).toFixed(2)+'% relevant, percentile '+n.pct.toFixed(0))+'"></i>').join("")+'</div>';
+    const third=Math.max(1,Math.floor(judged.length/3)), med=a=>{const s=a.map(n=>n.pct).sort((p,q)=>p-q);return s[s.length>>1];};
+    h+='<p class="note">'+ns.length+' '+gr+'s walked from '+idxDate(i0)+(e.a<R0()?' (the edge opened '+iso(e.a)+')':'')
+      +' · '+nul+' NULL days · '+rel.length+' deemed relevant'
+      +(judged.length?' · median percentile '+med(judged.slice(0,third)).toFixed(0)+' in the first third, '
+        +med(judged.slice(-third)).toFixed(0)+' in the last':'')
+      +(judged.length?' · current micronode: percentile '+judged.at(-1).pct.toFixed(0):'')+'</p>';
+    if(rel.length){
+      const top=rel.slice().sort((p,q)=>q.pct-p.pct);
+      h+='<details'+(e.bb?' open':'')+'><summary>micronodes deemed relevant ('+rel.length+')</summary><ul class="mn">'
+        +top.slice(0,12).map(n=>{
+          const days=gr==="day"?[n]:relDays([n]).sort((p,q)=>q.pct-p.pct).slice(0,3);
+          return '<li><span class="mono">'+gr+' from '+idxDate(n.i0)+'</span> — '+(100*n.share).toFixed(2)+'% relevant, percentile <b>'
+            +n.pct.toFixed(0)+'</b>'+days.map(d=>'<div class="d"><a class="mono" href="'+gdelt(idxDate(d.i0))+'" target="_blank" rel="noopener">'
+            +idxDate(d.i0)+'</a> · percentile '+d.pct.toFixed(0)+' · '+esc(R.lead[d.i0]||"")+'</div>').join("")+'</li>';
+        }).join("")+(top.length>12?'<li class="muted">… '+(top.length-12)+' more</li>':'')+'</ul></details>';
+    }
+    return h+'</div>';
+  }).join("")||'<p class="muted">No edge of this SFO is open at the instant.</p>';
+
+  // sentences
+  const sLo=(tnldy(lo)-14160)/100, sHi=(tnldy(hi)-14160)/100, sent=[];
+  for(const yi of XS){ for(const xj of XS){ const s=yi+xj; if(s>=sLo&&s<sHi) sent.push([yi,xj,dateOf(yi,xj)]); } }
+  sent.sort((a,b)=>a[2]-b[2]);
+  $("#sent").innerHTML=sent.length?'<div class="tbl"><table><tr><th>Y</th><th>X</th><th>at</th><th>reading</th></tr>'
+    +sent.slice(0,200).map(([yi,xj,d])=>'<tr><td class="mono">'+g0(yi)+'</td><td class="mono">'+g0(xj)+'</td><td class="mono">'
+    +stamp(d).slice(11)+'</td><td>«'+rd(xj)+'» is being «'+rd(yi)+'»</td></tr>').join("")+'</table></div>'
+    +(sent.length>200?'<p class="note">… '+(sent.length-200)+' more; narrow the granule.</p>':'')
+    :'<p class="muted">No pair of SFO_BB values lands inside this granule.</p>';
+
+  // ahead
+  const rows=ahead.map(([x,d])=>[d,'key','X = '+g0(x),rd(x),eAhead.some(([,de])=>Math.abs(de-d)<60000)])
+    .concat(eAhead.map(([x,d])=>[d,'eigen','crosses '+g0(x),rd(x),ahead.some(([,da])=>Math.abs(da-d)<60000)]))
+    .sort((a,b)=>a[0]-b[0]);
+  $("#ahead").innerHTML=rows.length?'<div class="tbl"><table><tr><th>when (UTC)</th><th>in</th><th></th><th>reading</th></tr>'
+    +rows.map(([d,k,w,r,j])=>'<tr><td class="mono">'+stamp(d)+'</td><td class="mono">'+((d-at)/DAY).toFixed(1)+' d</td><td>'
+    +(k==="eigen"?'<span class="tag">eigen</span> ':'')+w+(j?' <span class="joint">joint firing</span>':'')+'</td><td>'+r+'</td></tr>').join("")
+    +'</table></div>':'<p class="muted">Nothing within '+O.horizon_days+' days.</p>';
+
+  $("#eigen").innerHTML='<p class="mono">Yp = '+yp.toFixed(4)+'</p><div class="rd">last key <span class="mono">'+(prv!=null?g0(prv):"—")
+    +'</span>'+(prv!=null?' — '+rd(prv):'')+'</div><div class="rd">next key <span class="mono">'+(nxt!=null?g0(nxt)+' · '+stamp(dateOf(nxt,nxt)):"—")
+    +'</span>'+(nxt!=null?' — <b>'+rd(nxt)+'</b>':'')+'</div>';
+}
+
+/* ---- journal and orders ---- */
+async function journal(list){
+  const sel=$("#jsel");
+  sel.innerHTML=list.map(d=>'<option>'+d+'</option>').join("");
+  const show=async d=>{
+    try{ const t=await (await fetch("journal/"+d+".md",{cache:"no-cache"})).text();
+         $("#jbody").innerHTML=window.marked?marked.parse(t):'<pre>'+esc(t)+'</pre>'; }
+    catch(e){ $("#jbody").innerHTML='<p class="muted">could not load '+d+'</p>'; }
+  };
+  sel.onchange=()=>show(sel.value);
+  if(list.length) show(list[0]); else $("#jbody").innerHTML='<p class="muted">No entries yet.</p>';
+}
+function orders(){
+  const r=O.relevance;
+  $("#orders").innerHTML='<p><span class="tag p">'+esc(r._status.split(",")[0])+'</span></p><p class="note">'+esc(r._status)+'</p>'
+    +'<p class="note">Matched against '+esc(r._matched_against)+'. Definition <span class="mono">'+esc(R.def)+'</span>.</p>'
+    +'<div class="tbl"><table><tr><th>terms</th><th>why</th></tr>'+Object.entries(r.terms).map(([k,v])=>
+      '<tr><td class="mono">'+esc(k)+'</td><td>'+esc(v)+'</td></tr>').join("")+'</table></div>'
+    +'<p class="note">Standing instances: '+O.instances.join(", ")+' · horizon '+O.horizon_days+' days · relevant at percentile ≥ '
+    +O.relevant_percentile+'. The member\'s history runs '+R.start+' → '+R.end+'.</p>';
+  $("#cut").textContent=O.relevant_percentile;
+  $("#gbs").textContent=O.granule_by_span_days.map(([g,l])=>g+" up to "+l+" days").join(", ");
+}
+
+Promise.all(["sfo","relevance","orders","journal"].map(n=>fetch("data/"+n+".json",{cache:"no-cache"}).then(r=>r.json())))
+.then(([s,r,o,j])=>{
+  S=s; R=r; O=o; NODE={}; S.nodes.forEach(n=>NODE[n.x]=n); XS=S.nodes.map(n=>n.x).sort((a,b)=>a-b); EDGES=S.edges;
+  orders(); journal(j);
+  const q=new URLSearchParams(location.search);
+  $("#y").value=(+(q.get("y")||O.instances[0])).toFixed(2);
+  if(q.get("at")) $("#at").value=q.get("at");
+  if(q.get("g")&&G[q.get("g")]) $("#g").value=q.get("g");
+  const step=k=>{const {at,g}=read(); $("#at").value=new Date(at+k*G[g]).toISOString().slice(0,16); draw();};
+  $("#prev").onclick=()=>step(-1); $("#next").onclick=()=>step(1);
+  $("#now").onclick=()=>{$("#at").value=new Date().toISOString().slice(0,16); draw();};
+  ["#y","#at","#g"].forEach(id=>$(id).onchange=draw);
+  draw();
+}).catch(e=>{document.querySelector(".wrap").insertAdjacentHTML("afterbegin",'<div class="card">could not load the member\'s data: '+esc(e)+'</div>');});
+</script>
+</body>
+</html>
