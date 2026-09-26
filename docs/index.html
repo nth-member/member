@@ -203,7 +203,7 @@ function read(){
   const q=new URLSearchParams(location.search);
   const y=+($("#y").value||q.get("y")||O.instances[0]);
   const at=$("#at").value?Date.parse($("#at").value+"Z"):(q.get("at")?Date.parse(q.get("at")+"Z"):Date.now());
-  return {y,at,g:$("#g").value};
+  return {y,at,g:G[$("#g").value]?$("#g").value:"day"};
 }
 function sync(y,at,g){
   $("#y").value=y.toFixed(2); $("#at").value=new Date(at).toISOString().slice(0,16); $("#g").value=g;
