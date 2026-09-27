@@ -58,9 +58,12 @@ terms change.
 | `granule_by_span_days` | the starting granule for an edge, by its length: day up to 400 days, week up to 1,900, month beyond |
 | `relevance.terms` | what the field is read for |
 
-**The relevance terms are a proposal**, drawn from the places Revelation names: the holy city and
-the temple, the Euphrates, Megiddo, Babylon, Gog and Magog. They stand until the author corrects
-them. REVOTT, the Revelation Of The Trial, is tuned by default to geopolitical events tending toward
+**The relevance terms are the author's**, set on 2026-09-26: Sarajevo, Bosnia-Herzegovina, Serbia and
+the Serbs, the Euphrates (with Iraq and Syria), Megiddo and Armageddon, Babylon, Gog and Magog, Russia
+and Moscow, Washington and the United States, Jerusalem, Israel, the Temple Mount and Al-Aqsa, Rome,
+Mecca, Sofia, Egypt, the European Union, NATO, the United Nations and its Security Council, and China
+and Beijing. They are matched as whole words, case-insensitively, against GDELT's actor and place
+names. REVOTT, the Revelation Of The Trial, is tuned by default to geopolitical events tending toward
 the fulfilment of the Apocalypse seen by John. Most of GDELT has no bearing on it, and nothing here
 reads GDELT whole.
 
@@ -73,3 +76,13 @@ reads GDELT whole.
 - Readings lead with each key's marking, then the apocalypse sequence (seal, trumpet, vial, horns),
   then any derived sub-context. A key with no primary layer of its own carries the last preceding
   key's, and is marked as carried.
+
+## The nth-member sites
+
+| site | repository | what it is |
+|---|---|---|
+| https://nth-member.github.io/revott/ | nth-member/revott | REVOTT atop GDELT: the field at every node of an instance |
+| https://nth-member.github.io/gdelt/ | nth-member/gdelt | what GDELT was reading on a given day |
+| https://nth-member.github.io/member/ | nth-member/member | the nth member: REVOTT's numerator, its introspection and its journal |
+| https://nth-member.github.io/gematria/ | nth-member/gematria | H-Gematria/ASCII: the two name-value programs in the browser |
+| https://nth-member.github.io/alien-corridor/ | nth-member/alien-corridor | the Alien Corridor Support System (MDQNM engine) in the browser |

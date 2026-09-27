@@ -23,8 +23,8 @@ it writes one journal entry for the day, docs/journal/DAY.md, holding:
 
 It reports percentiles against the member's own history, never p-values. NULL
 days read as NULL. The corpus is streamed through `unzip -p`, never extracted.
-The relevance terms are a proposal until the author corrects them; the entry
-says so every time.
+The relevance terms are the author's, in member.json; the entry names the
+definition it read the field with.
 """
 from __future__ import annotations
 
@@ -344,7 +344,7 @@ def main():
     # 5. what the member cannot yet do
     lines.append("")
     lines.append("## 5. Standing limits")
-    lines.append("- The relevance terms are a proposal until the author corrects `member.json`.")
+    lines.append("- The field is read only for the author's relevance terms in `member.json`; everything else in GDELT is left unread.")
     lines.append("- Percentiles are against the member's own history; they are readings, not significance.")
     lines.append("- GDELT 1.0 floors the granule at one day; micronodes below a day need GDELT 2.0's 15-minute feed.")
     lines.append("- Micronodes before 2013-04-01 are not yet walked.")

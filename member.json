@@ -7,7 +7,7 @@
   "relevant_percentile": 90,
   "granule_by_span_days": [["day", 400], ["week", 1900], ["month", 100000]],
   "relevance": {
-    "_status": "PROPOSAL.",
+    "_status": "Set by the author, 2026-09-26.",
     "_matched_against": "Actor1Name, Actor2Name, Actor1Geo_FullName, Actor2Geo_FullName, ActionGeo_FullName -- case-insensitive, whole words",
     "terms": {
 	  "sarajevo": "Fulfilment0000000",
