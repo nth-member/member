@@ -35,7 +35,7 @@ import re
 import subprocess
 import sys
 from concurrent.futures import ProcessPoolExecutor
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import os
@@ -43,6 +43,7 @@ import os
 HERE = Path(__file__).resolve().parent
 REVOTT = Path(os.environ.get("REVOTT", Path.home() / "revott"))
 sys.path.insert(0, str(REVOTT))
+from revott.core import NSUKKA  # noqa: E402
 from revott.introspect import introspect, render  # noqa: E402
 from revott.sfo import SFO  # noqa: E402
 
@@ -239,7 +240,7 @@ def main():
     field = {r["date"]: r for r in csv.DictReader(open(FIELD))}
     day = sys.argv[1] if len(sys.argv) > 1 else max(field)
     D = date.fromisoformat(day)
-    day_dt = datetime(D.year, D.month, D.day, tzinfo=timezone.utc)
+    day_dt = datetime(D.year, D.month, D.day, tzinfo=NSUKKA)   # the day, from Nsukka's midnight
     base_days = [(D - timedelta(days=i)).isoformat() for i in range(ORDERS["baseline_days"], -1, -1)]
     base_days = [d for d in base_days if d >= "2013-04-01"]
 
@@ -254,7 +255,7 @@ def main():
                  for i in range((D - earliest).days + 1)]
     cache = ensure(sorted(set(base_days) | set(span_days)), load_cache())
     lines = [f"# {day} — the member's entry", ""]
-    lines.append(f"*Written {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC, unprompted, after the refresh. "
+    lines.append(f"*Written {datetime.now(NSUKKA):%Y-%m-%d %H:%M} Nsukka, unprompted, after the refresh. "
                  f"Relevance definition `{DEFHASH}` — {REL['_status']}*")
     lines.append("")
 
@@ -267,11 +268,11 @@ def main():
         lines.append(render(r, markdown=True))
         for x, when in r["ahead"]:
             if (when - day_dt).days <= ORDERS["announce_within_days"]:
-                announcements.append(f"- **Y = {y:g}: X = {x:g} fires {when:%Y-%m-%d %H:%M} UTC** — "
+                announcements.append(f"- **Y = {y:g}: X = {x:g} fires {when:%Y-%m-%d %H:%M} Nsukka** — "
                                      f"{sfo.keys[x].reading}")
         for x, when in r["eigen_ahead"]:
             if (when - day_dt).days <= ORDERS["announce_within_days"]:
-                announcements.append(f"- eigen crosses {x:g} on {when:%Y-%m-%d %H:%M} UTC — "
+                announcements.append(f"- eigen crosses {x:g} on {when:%Y-%m-%d %H:%M} Nsukka — "
                                      f"{sfo.keys[x].reading} *(a curiosity)*")
         lines.append("")
         lines.append(f"**Granule for the next reading:** {granule_advice(r['ahead'], day_dt)}")

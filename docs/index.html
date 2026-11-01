@@ -96,7 +96,7 @@ against the member's own history, refined where deemed relevant.</p>
 
 <div class="card bar">
   <div><label for="y">Y — the instance</label><input type="number" id="y" step="0.01" min="-147.60" max="212.40"></div>
-  <div><label for="at">instant (UTC)</label><input type="datetime-local" id="at" step="60"></div>
+  <div><label for="at">instant (Nsukka)</label><input type="datetime-local" id="at" step="60"></div>
   <div><label for="g">granule</label>
     <select id="g"><option>second</option><option>minute</option><option>hour</option><option selected>day</option>
       <option>week</option><option>month</option><option>year</option></select></div>
@@ -148,24 +148,29 @@ against the member's own history, refined where deemed relevant.</p>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="nsukka-yg-clock.js"></script>
 <script>
 const $=s=>document.querySelector(s);
-const DAY=86400000, ORIGIN=Date.UTC(1969,10,7,11,28,41,739);
+const DAY=86400000, Yg=window.NsukkaYg;
 const G={second:1000,minute:60000,hour:3600000,day:DAY,week:7*DAY,month:30*DAY,year:365.2174*DAY};
 const GD={day:1,week:7,month:30}, FINER={month:"week",week:"day"};
 let S,R,O,XS,NODE,EDGES,refs={};
 
 const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-const dateOf=(y,x)=>ORIGIN+(14160+100*(y+x))*DAY;
-const tnldy=t=>(t-ORIGIN)/DAY;
-const iso=t=>new Date(t).toISOString().slice(0,10);
-const stamp=t=>new Date(t).toISOString().slice(0,16).replace("T"," ");
+/* Time is read from Nsukka on the Nsukka/Yg clock (nsukka-yg-clock.js): the engine's year, Yg = 17640/48.3
+   days, laid on Nsukka's calendar from 1 December 00:00 and recalibrated every Yg year. A TNLDY that a
+   recalibration passes over has no instant (NaN, and so fires nowhere); of two instants the first is taken. */
+const dateOf=(y,x)=>{const a=Yg.instantsOf((14160+100*(y+x)).toFixed(4));return a.length?a[0]:NaN;};
+const tnldy=t=>Yg.zOf(t).z;
+const iso=t=>isNaN(t)?"passed over":Yg.dateNsukka(t);
+const stamp=t=>isNaN(t)?"passed over":Yg.nsukka(t).slice(0,16);
+const local=t=>Yg.nsukka(t).slice(0,16).replace(" ","T");   // for the instant box and the address
 const g0=x=>+x.toFixed(4)+"";
 const rd=x=>esc(NODE[x].r);
 const gdelt=d=>"https://nth-member.github.io/gdelt/?date="+d;
 
 /* ---- the member's history ---- */
-const R0=()=>Date.parse(R.start+"T00:00:00Z");
+const R0=()=>Date.parse(R.start+"T00:00:00+01:00");   // the first day of history, from Nsukka's midnight
 function dayIdx(t){return Math.floor((t-R0())/DAY);}
 function win(i0,w){
   let rows=0,hits=0,present=0,nul=0;
@@ -202,12 +207,12 @@ const idxDate=i=>iso(R0()+i*DAY);
 function read(){
   const q=new URLSearchParams(location.search);
   const y=+($("#y").value||q.get("y")||O.instances[0]);
-  const at=$("#at").value?Date.parse($("#at").value+"Z"):(q.get("at")?Date.parse(q.get("at")+"Z"):Date.now());
+  const at=$("#at").value?Date.parse($("#at").value+"+01:00"):(q.get("at")?Date.parse(q.get("at")+"+01:00"):Date.now());
   return {y,at,g:G[$("#g").value]?$("#g").value:"day"};
 }
 function sync(y,at,g){
-  $("#y").value=y.toFixed(2); $("#at").value=new Date(at).toISOString().slice(0,16); $("#g").value=g;
-  history.replaceState(null,"","?y="+y.toFixed(2)+"&at="+new Date(at).toISOString().slice(0,16)+"&g="+g);
+  $("#y").value=y.toFixed(2); $("#at").value=local(at); $("#g").value=g;
+  history.replaceState(null,"","?y="+y.toFixed(2)+"&at="+local(at)+"&g="+g);
 }
 function draw(){
   const {y,at,g}=read(); sync(y,at,g);
@@ -277,7 +282,7 @@ function draw(){
 
   // sentences
   const sLo=(tnldy(lo)-14160)/100, sHi=(tnldy(hi)-14160)/100, sent=[];
-  for(const yi of XS){ for(const xj of XS){ const s=yi+xj; if(s>=sLo&&s<sHi) sent.push([yi,xj,dateOf(yi,xj)]); } }
+  for(const yi of XS){ for(const xj of XS){ const s=yi+xj; if(s>=sLo&&s<sHi){ const d=dateOf(yi,xj); if(!isNaN(d)) sent.push([yi,xj,d]); } } }
   sent.sort((a,b)=>a[2]-b[2]);
   $("#sent").innerHTML=sent.length?'<div class="tbl"><table><tr><th>Y</th><th>X</th><th>at</th><th>reading</th></tr>'
     +sent.slice(0,200).map(([yi,xj,d])=>'<tr><td class="mono">'+g0(yi)+'</td><td class="mono">'+g0(xj)+'</td><td class="mono">'
@@ -289,7 +294,7 @@ function draw(){
   const rows=ahead.map(([x,d])=>[d,'key','X = '+g0(x),rd(x),eAhead.some(([,de])=>Math.abs(de-d)<60000)])
     .concat(eAhead.map(([x,d])=>[d,'eigen','crosses '+g0(x),rd(x),ahead.some(([,da])=>Math.abs(da-d)<60000)]))
     .sort((a,b)=>a[0]-b[0]);
-  $("#ahead").innerHTML=rows.length?'<div class="tbl"><table><tr><th>when (UTC)</th><th>in</th><th></th><th>reading</th></tr>'
+  $("#ahead").innerHTML=rows.length?'<div class="tbl"><table><tr><th>when (Nsukka)</th><th>in</th><th></th><th>reading</th></tr>'
     +rows.map(([d,k,w,r,j])=>'<tr><td class="mono">'+stamp(d)+'</td><td class="mono">'+((d-at)/DAY).toFixed(1)+' d</td><td>'
     +(k==="eigen"?'<span class="tag">eigen</span> ':'')+w+(j?' <span class="joint">joint firing</span>':'')+'</td><td>'+r+'</td></tr>').join("")
     +'</table></div>':'<p class="muted">Nothing within '+O.horizon_days+' days.</p>';
@@ -331,9 +336,9 @@ Promise.all(["sfo","relevance","orders","journal"].map(n=>fetch("data/"+n+".json
   $("#y").value=(+(q.get("y")||O.instances[0])).toFixed(2);
   if(q.get("at")) $("#at").value=q.get("at");
   if(q.get("g")&&G[q.get("g")]) $("#g").value=q.get("g");
-  const step=k=>{const {at,g}=read(); $("#at").value=new Date(at+k*G[g]).toISOString().slice(0,16); draw();};
+  const step=k=>{const {at,g}=read(); $("#at").value=local(at+k*G[g]); draw();};
   $("#prev").onclick=()=>step(-1); $("#next").onclick=()=>step(1);
-  $("#now").onclick=()=>{$("#at").value=new Date().toISOString().slice(0,16); draw();};
+  $("#now").onclick=()=>{$("#at").value=local(Date.now()); draw();};
   ["#y","#at","#g"].forEach(id=>$(id).onchange=draw);
   draw();
 }).catch(e=>{document.querySelector(".wrap").insertAdjacentHTML("afterbegin",'<div class="card">could not load the member\'s data: '+esc(e)+'</div>');});

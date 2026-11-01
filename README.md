@@ -4,7 +4,13 @@
 
 Every fixed Y in REVOTT generates a 400-node, 704-edge SFO over X:
 
-    TNLDY = 14160 + 100·(Y + X)        date = 1969-11-07T11:28:41.739Z + TNLDY days
+    TNLDY = 14160 + 100·(Y + X)        date = the instant at which the Nsukka/Yg clock reads TNLDY
+
+Time is read from Nsukka (WAT, UTC+01:00) on the engine's own year, Yg = 17640/48.3 days, laid on
+Nsukka's calendar from 1 December 00:00 and recalibrated every Yg year (REVOTT's `revott/clock.py`;
+the page's copy is `docs/nsukka-yg-clock.js`). The instant box, the address and every time shown are
+Nsukka time, and each journal day runs from Nsukka's midnight. Entries written before 2026-11-01 used
+the earlier uniform UTC reckoning and are kept as written.
 
 The member always knows where that SFO is. At any instant it reports:
 
