@@ -2,7 +2,7 @@
 
 **REVOTT's numerator, working on its own.** Served at https://nth-member.github.io/member/.
 
-Every fixed Y in REVOTT generates a 400-node, 704-edge SFO over X:
+Every fixed Y in REVOTT generates a 401-node, 707-edge SFO over X:
 
     TNLDY = 14160 + 100·(Y + X)        date = the instant at which the Nsukka/Yg clock reads TNLDY
 
@@ -17,7 +17,7 @@ The member always knows where that SFO is. At any instant it reports:
 - which keys fire;
 - which edges are open and how far along each one is;
 - the layered reading of both ends of each open edge;
-- the (Y, X) sentences on the instant's line through the 400 × 400 grid, read as «X» is being «Y».
+- the (Y, X) sentences on the instant's line through the 401 × 401 grid, read as «X» is being «Y».
 
 It walks the **micronodes** along every open edge. A micronode is a granule of the trajectory, from a
 second to a year, judged for its relevance to that trajectory. A granule deemed relevant is refined

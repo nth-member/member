@@ -8,7 +8,7 @@ it writes one journal entry for the day, docs/journal/DAY.md, holding:
 
   1. where each standing instance's SFO is -- the open edges and how far along,
      the layered reading of their ends, what fires inside the day, the day's
-     line through the 400 x 400 grid, and the eigen curiosity beside them
+     line through the 401 x 401 grid, and the eigen curiosity beside them
      (revott.introspect)
   2. the micronodes along every open edge: the trajectory walked in granules
      from the edge's source to today, each granule judged against the member's

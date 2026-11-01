@@ -5,7 +5,7 @@
 
 Writes, under docs/:
 
-    data/sfo.json         REVOTT's 400 keys read in layers, and its 704 edges
+    data/sfo.json         REVOTT's 401 keys read in layers, and its 707 edges
     data/relevance.json   one entry per day of the URL era: the day's rows, the rows
                           relevant to the member's terms, and the day's leading
                           relevant event -- NULL where GDELT published no archive
