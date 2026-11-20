@@ -105,7 +105,11 @@ Because nearly every event matches some entry, the member reads each entry on it
 - In a granule, each entry's share of the events is placed as a percentile rank in that entry's own
   history of granules the same size, with ties counting half. An entry at its usual zero reads 50,
   not 100; it rises only above its usual level.
-- The granule's reading is the mean of those percentiles, weighted by `relevance.weights`. The
+- The granule's reading is the sum of the entries' shares above their own medians: each entry's
+  excess over its own median share in that history, weighted by `relevance.weights` and summed. An
+  entry below its median adds nothing, so a granule whose events concentrate on a few entries (a
+  war, an invasion) reads high instead of being outvoted by the entries it crowds out. (Until
+  2026-11-20 it was the mean of the entries' percentiles, which read such granules low.) The
   reading is placed in turn as a percentile in the member's history of granules that size. At or
   above `relevant_percentile` the granule is deemed relevant and refined.
 - The entries that **rose** are those at or above that percentile in their own history.

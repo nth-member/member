@@ -2,8 +2,10 @@
    the two against each other).
 
    Each entry's share of a granule's events is placed as a percentile rank (ties counting half)
-   in that entry's own history of granules the same size. The granule's reading is the weighted mean of those
-   percentiles (every weight 1 unless member.json's relevance.weights sets it), and the reading
+   in that entry's own history of granules the same size. The granule's reading is the sum of the entries' shares above
+   their own medians: each entry's excess over its own median share, weighted (every weight 1
+   unless member.json's relevance.weights sets it) and summed; an entry below its median adds
+   nothing, so concentration on a few entries reads high. The reading
    is itself placed as a percentile in the member's history. The entries that rose are those
    at or above the cut in their own history. Sums run in entry order, as in member.py, so both
    give the same numbers to the last bit. */
@@ -13,8 +15,6 @@
   function make(R, weights) {
     const N = R.entries.length;
     const W = R.entries.map(e => (weights && weights[e] != null ? +weights[e] : 1));
-    let WSUM = 0;
-    for (let k = 0; k < N; k++) WSUM += W[k];
     const refs = {};
 
     // percentile rank of v in a sorted history: the share of it below v, ties counting half
@@ -42,8 +42,12 @@
     function read(ref, x) {
       const p = x.shares.map((s, k) => at(ref.E[k], s));
       let t = 0;
-      for (let k = 0; k < N; k++) t += W[k] * p[k];
-      return { p, index: t / WSUM };
+      for (let k = 0; k < N; k++) {
+        const e = ref.E[k], n = e.length;
+        const m = n ? (e[(n - 1) >> 1] + e[n >> 1]) / 2 : 0;
+        t += W[k] * Math.max(0, x.shares[k] - m);
+      }
+      return { p, index: t };
     }
 
     // the member's history at this granule, from every non-overlapping window

@@ -114,7 +114,7 @@ against the member's own history, refined where deemed relevant.</p>
   <h2>Open edges — and the micronodes along them</h2>
   <p class="note">Each edge is walked from its source to the instant in granules sized by its length (orders:
     <span id="gbs"></span>). In every granule each relevance entry's share of the events is placed as a percentile rank (ties
-    counting half) in that entry's own history of granules the same size; the granule's reading is the mean of those percentiles, placed in turn as a
+    counting half) in that entry's own history of granules the same size; the granule's reading is the sum of the entries' shares above their own medians (each entry's excess over its own median share, summed; an entry below its median adds nothing), placed in turn as a
     percentile in the member's own history of granules that size. "Rose" names the entries at or above the cut in their own
     history. At or above the <span id="cut"></span>th the granule is deemed relevant (red) and refined to the next
     granule down, to the day GDELT 1.0 can resolve. Dotted: no archive — NULL, never zero. Before 2013-04-01 the

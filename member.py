@@ -64,9 +64,6 @@ PATTERN = re.compile(r"\b(" + "|".join(re.escape(w) for w in sorted(WORD, key=le
 # Each entry's weight in a granule's reading: 1 unless member.json's relevance.weights sets it.
 # Weights act on the counts, so changing them needs no rebuild of the cache.
 WEIGHTS = [float(REL.get("weights", {}).get(e, 1)) for e in ENTRIES]
-WSUM = 0.0
-for _w in WEIGHTS:          # summed in order, exactly as docs/relevance.js sums them
-    WSUM += _w
 DEFHASH = hashlib.sha1((json.dumps(REL["terms"], sort_keys=True) + "v3").encode()).hexdigest()[:10]
 
 
@@ -199,12 +196,18 @@ def rank(ref, v):
 
 
 def read(ref, w):
-    """Each entry's percentile in its own history of granules this size, and their weighted mean."""
+    """Each entry's percentile in its own history of granules this size, and the granule's
+    reading: the share of its events above the entries' usual levels, i.e. each entry's excess
+    over its own median share, weighted and summed in entry order. An entry below its usual level
+    adds nothing, so a granule whose events concentrate on a few entries reads high instead of
+    being outvoted by the entries it crowds out."""
     p = [rank(ref[0][k], s) for k, s in enumerate(w["shares"])]
     t = 0.0
-    for k in range(len(p)):
-        t += WEIGHTS[k] * p[k]
-    return p, t / WSUM
+    for k, s in enumerate(w["shares"]):
+        e = ref[0][k]
+        m = (e[(len(e) - 1) // 2] + e[len(e) // 2]) / 2 if e else 0.0
+        t += WEIGHTS[k] * max(0.0, s - m)
+    return p, t
 
 
 def reference(cache, width: int):
@@ -404,8 +407,9 @@ def main():
         lines.append(f"- All of GDELT: {int(f['n_events']):,} events, z = {z} "
                      "(z is provisional this close to the end of the series).")
         lines.append(f"- Matched by any entry: {hits:,} events = {share:.2%} of the day.")
-        lines.append(f"- **The day's reading** — the mean of the {len(ENTRIES)} entries' percentiles, each in "
-                     f"its own history of days — is {dw['index']:.1f}: percentile **{dw['pct']:.0f}** "
+        lines.append(f"- **The day's reading** — the sum of the {len(ENTRIES)} entries' shares above their own "
+                     f"median day (an event matching several entries counts for each) — is {dw['index']:.2%}: "
+                     f"percentile **{dw['pct']:.0f}** "
                      "among the member's days.")
         lines.append(f"- **Entries that rose** (at or above the {cut:g}th percentile of their own history): "
                      + (", ".join(f"{label(k)} {dw['n'][k]:,} events, p{dw['p'][k]:.0f}" for k in dw["rose"][:12])
