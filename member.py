@@ -53,7 +53,7 @@ CACHE = HERE / "cache" / "relevance_daily.csv"
 JOURNAL = HERE / "docs" / "journal"
 ORDERS = json.loads((HERE / "member.json").read_text())
 REL = ORDERS["relevance"]
-PATTERN = re.compile(r"\b(" + "|".join(REL["terms"]) + r")\b", re.I)
+PATTERN = re.compile(r"\b(" + "|".join(REL["terms"].values()) + r")\b", re.I)
 DEFHASH = hashlib.sha1((json.dumps(REL["terms"], sort_keys=True) + "v2").encode()).hexdigest()[:10]
 
 

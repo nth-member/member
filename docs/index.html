@@ -321,8 +321,8 @@ function orders(){
   const r=O.relevance;
   $("#orders").innerHTML='<p><span class="tag p">'+esc(r._status.split(",")[0])+'</span></p><p class="note">'+esc(r._status)+'</p>'
     +'<p class="note">Matched against '+esc(r._matched_against)+'. Definition <span class="mono">'+esc(R.def)+'</span>.</p>'
-    +'<div class="tbl"><table><tr><th>terms</th><th>why</th></tr>'+Object.entries(r.terms).map(([k,v])=>
-      '<tr><td class="mono">'+esc(k)+'</td><td>'+esc(v)+'</td></tr>').join("")+'</table></div>'
+    +'<div class="tbl"><table><tr><th>ID</th><th>terms</th></tr>'+Object.entries(r.terms).map(([k,v])=>
+      '<tr><td>'+esc(k)+'</td><td class="mono">'+esc(v)+'</td></tr>').join("")+'</table></div>'
     +'<p class="note">Standing instances: '+O.instances.join(", ")+' · horizon '+O.horizon_days+' days · relevant at percentile ≥ '
     +O.relevant_percentile+'. The member\'s history runs '+R.start+' → '+R.end+'.</p>';
   $("#cut").textContent=O.relevant_percentile;

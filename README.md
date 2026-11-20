@@ -64,14 +64,35 @@ terms change.
 | `granule_by_span_days` | the starting granule for an edge, by its length: day up to 400 days, week up to 1,900, month beyond |
 | `relevance.terms` | what the field is read for |
 
-**The relevance terms are the author's**, set on 2026-09-26: Sarajevo, Bosnia-Herzegovina, Serbia and
-the Serbs, the Euphrates (with Iraq and Syria), Megiddo and Armageddon, Babylon, Gog and Magog, Russia
-and Moscow, Washington and the United States, Jerusalem, Israel, the Temple Mount and Al-Aqsa, Rome,
-Mecca, Sofia, Egypt, the European Union, NATO, the United Nations and its Security Council, and China
-and Beijing. They are matched as whole words, case-insensitively, against GDELT's actor and place
-names. REVOTT, the Revelation Of The Trial, is tuned by default to geopolitical events tending toward
-the fulfilment of the Apocalypse seen by John. Most of GDELT has no bearing on it, and nothing here
-reads GDELT whole.
+**The relevance terms are the author's.** The author set 25 on 2026-09-26: Sarajevo, Bosnia-Herzegovina,
+Serbia and the Serbs, the Euphrates (with Iraq and Syria), Megiddo and Armageddon, Babylon, Gog and
+Magog, Russia and Moscow, Washington and the United States, Jerusalem, Israel, the Temple Mount and
+Al-Aqsa, Rome, Mecca, Sofia, Egypt, the European Union, NATO, the United Nations and its Security
+Council, and China and Beijing.
+
+On 2026-11-20 the author upgraded them:
+
+- Iran, the West Bank and Palestine, Turkey, Jordan and the African Union join the first themes.
+- Several of the first themes gain a capital or a country: Belgrade, Baghdad and Damascus, Italy, Bulgaria, Cairo.
+- Every state of Europe and Asia is added with its capital.
+
+The list was then completed at the author's instruction:
+
+- Every other member state of the United Nations is added with its capital, together with Western Sahara and
+  Somaliland. The author's own entries already held Kosovo, Palestine, Taiwan and Vatican City.
+- Gaza joins Palestine's entry, and Hong Kong and Macau join China's.
+- Listed countries gain the other names GDELT or the headlines use for them: Czech Republic, Slovak
+  Republic, Macedonia, East Timor, Bosnia, Türkiye, Britain and UK, Vatican and Holy See, UAE.
+- The Maldives' capital is written Malé, so that the ordinary word "male" does not match.
+
+There are now 214 entries, Fulfilment0000000 to Fulfilment0000215, and each word stands in one entry. A city
+with its own entry (Sarajevo, Moscow, Jerusalem) is not repeated in its country's entry.
+Fulfilment0000028 and Fulfilment0000100 repeated earlier entries and were removed.
+
+The terms are matched as whole words, case-insensitively, against GDELT's actor and place names. On
+15–16 November 2026 they matched 97.2% of GDELT's events; the first 25 matched 45.0%. Nearly all the
+rest carry no place at all. REVOTT, the Revelation Of The Trial, is tuned by default to geopolitical
+events tending toward the fulfilment of the Apocalypse seen by John.
 
 ## Rules
 
