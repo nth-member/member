@@ -32,8 +32,9 @@ in the browser, for any Y, instant and granule:
 - **position:** TNLDY, the X the instant falls on, and the next key;
 - **firing:** keys of the SFO inside the granule;
 - **open edges:** progress along each, the readings of both ends, and the micronode strip. The strip
-  has one bar per granule, and its height is that granule's percentile in the member's own history.
-  Red bars are deemed relevant, and each one's refinement to days links to that day's sources on
+  has one bar per granule, and its height is that granule's reading as a percentile in the member's
+  own history (see *The reading*, below). Red bars are deemed relevant, each names the entries that
+  rose, and each one's refinement to days links to that day's sources on
   [nth-member/gdelt](https://nth-member.github.io/gdelt/);
 - **sentences:** every (Y, X) pair of SFO_BB values landing inside the granule;
 - **ahead:** keys and eigen crossings within the horizon, with joint firings flagged;
@@ -63,6 +64,7 @@ terms change.
 | `relevant_percentile` | the cut for "deemed relevant" (default 90) |
 | `granule_by_span_days` | the starting granule for an edge, by its length: day up to 400 days, week up to 1,900, month beyond |
 | `relevance.terms` | what the field is read for |
+| `relevance.weights` | each entry's weight in a granule's reading (1 where absent; empty until set) |
 
 **The relevance terms are the author's.** The author set 25 on 2026-09-26: Sarajevo, Bosnia-Herzegovina,
 Serbia and the Serbs, the Euphrates (with Iraq and Syria), Megiddo and Armageddon, Babylon, Gog and
@@ -93,6 +95,25 @@ The terms are matched as whole words, case-insensitively, against GDELT's actor 
 15–16 November 2026 they matched 97.2% of GDELT's events; the first 25 matched 45.0%. Nearly all the
 rest carry no place at all. REVOTT, the Revelation Of The Trial, is tuned by default to geopolitical
 events tending toward the fulfilment of the Apocalypse seen by John.
+
+## The reading
+
+Because nearly every event matches some entry, the member reads each entry on its own.
+
+- An event counts once for every entry whose words it carries. Where words overlap, the longest
+  wins, so "Guinea-Bissau" counts for Guinea-Bissau and not for Guinea.
+- In a granule, each entry's share of the events is placed as a percentile rank in that entry's own
+  history of granules the same size, with ties counting half. An entry at its usual zero reads 50,
+  not 100; it rises only above its usual level.
+- The granule's reading is the mean of those percentiles, weighted by `relevance.weights`. The
+  reading is placed in turn as a percentile in the member's history of granules that size. At or
+  above `relevant_percentile` the granule is deemed relevant and refined.
+- The entries that **rose** are those at or above that percentile in their own history.
+- The cache keeps each entry's daily count, so a change of weights needs no rebuild. A change of
+  terms rebuilds the cache.
+
+`member.py` computes the reading for the journal, and `docs/relevance.js` computes it for the page.
+`node tests/fidelity.mjs` checks that the two agree on every micronode the journal walks.
 
 ## Rules
 

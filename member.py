@@ -29,6 +29,7 @@ definition it read the field with.
 from __future__ import annotations
 
 import csv
+from bisect import bisect_left, bisect_right
 import hashlib
 import json
 import re
@@ -53,18 +54,54 @@ CACHE = HERE / "cache" / "relevance_daily.csv"
 JOURNAL = HERE / "docs" / "journal"
 ORDERS = json.loads((HERE / "member.json").read_text())
 REL = ORDERS["relevance"]
-PATTERN = re.compile(r"\b(" + "|".join(REL["terms"].values()) + r")\b", re.I)
-DEFHASH = hashlib.sha1((json.dumps(REL["terms"], sort_keys=True) + "v2").encode()).hexdigest()[:10]
+# Each entry is one of the author's Fulfilment IDs with its words, and each word stands in one
+# entry. Words are matched literally, as whole words, ignoring case. Where words overlap, the
+# longest wins, so "Guinea-Bissau" counts for Guinea-Bissau and not for Guinea.
+ENTRIES = list(REL["terms"])
+WORD = {w.lower(): k for k, e in enumerate(ENTRIES) for w in REL["terms"][e].split("|")}
+PATTERN = re.compile(r"\b(" + "|".join(re.escape(w) for w in sorted(WORD, key=len, reverse=True))
+                     + r")\b", re.I)
+# Each entry's weight in a granule's reading: 1 unless member.json's relevance.weights sets it.
+# Weights act on the counts, so changing them needs no rebuild of the cache.
+WEIGHTS = [float(REL.get("weights", {}).get(e, 1)) for e in ENTRIES]
+WSUM = 0.0
+for _w in WEIGHTS:          # summed in order, exactly as docs/relevance.js sums them
+    WSUM += _w
+DEFHASH = hashlib.sha1((json.dumps(REL["terms"], sort_keys=True) + "v3").encode()).hexdigest()[:10]
+
+
+def entry_of(text: str) -> int:
+    """The entry a matched word belongs to."""
+    k = WORD.get(text.lower())
+    if k is None:   # a letter whose lower case differs from the pattern's case folding
+        k = next(WORD[w] for w in WORD if re.fullmatch(re.escape(w), text, re.I))
+    return k
+
+
+def label(k: int) -> str:
+    """An entry as the journal names it: its first word and its ID's number."""
+    e = ENTRIES[k]
+    return f"{REL['terms'][e].split('|')[0]} [{e.removeprefix('Fulfilment')}]"
 
 
 def read_day(day: str):
-    """Stream one daily archive: rows, relevant rows, relevant material conflict,
-    and the day's most-carried relevant events. None if there is no archive."""
+    """Stream one daily archive: rows, rows any entry matched, those in material conflict,
+    the day's most-carried of them, and the events each entry matched. None if there is
+    no archive. An event counts once for every entry whose words it carries."""
     f = CORPUS / f"{day.replace('-', '')}.export.CSV.zip"
     if not f.exists():
         return None
     rows = hits = hits4 = 0
+    counts = [0] * len(ENTRIES)
     top = []
+    memo = {}       # a field's entries, read once per distinct value; no word spans a tab, so the
+                    # union over the five fields is what the joined fields would give
+
+    def entries_in(field):
+        r = memo.get(field)
+        if r is None:
+            r = memo[field] = frozenset(entry_of(m.group(1)) for m in PATTERN.finditer(field))
+        return r
     p = subprocess.Popen(["unzip", "-p", str(f)], stdout=subprocess.PIPE,
                          text=True, errors="replace")
     for line in p.stdout:
@@ -72,16 +109,20 @@ def read_day(day: str):
         if len(c) < 57:
             continue
         rows += 1
-        if not PATTERN.search("\t".join((c[6], c[16], c[36], c[43], c[50]))):
+        found = (entries_in(c[6]) | entries_in(c[16]) | entries_in(c[36]) | entries_in(c[43])
+                 | entries_in(c[50]))
+        if not found:
             continue
         hits += 1
+        for k in found:
+            counts[k] += 1
         if c[29] == "4":
             hits4 += 1
         top.append((int(c[33] or 0), c[28], c[26], c[6], c[16], c[50],
                     c[57] if len(c) > 57 else ""))
     p.wait()
     top.sort(key=lambda t: -t[0])
-    return day, rows, hits, hits4, top[:12]
+    return day, rows, hits, hits4, top[:12], counts
 
 
 def load_cache():
@@ -89,6 +130,7 @@ def load_cache():
     if CACHE.exists():
         for r in csv.DictReader(open(CACHE)):
             if r["def"] == DEFHASH:
+                r["n"] = [int(v) for v in r["counts"].split()]
                 out[r["date"]] = r
     return out
 
@@ -102,15 +144,16 @@ def ensure(days, cache):
         for res in ex.map(read_day, need):
             if res is None:
                 continue
-            d, rows, hits, hits4, top = res
+            d, rows, hits, hits4, top, counts = res
             lead = ""
             if top:
                 n, root, code, a1, a2, place, url = top[0]
                 lead = f"{n} art · root {root} · {a1 or '—'} / {a2 or '—'} · {place or '—'}"
             cache[d] = dict(date=d, rows=rows, hits=hits, hits4=hits4, lead=lead,
-                            **{"def": DEFHASH})
+                            counts=" ".join(map(str, counts)), n=counts, **{"def": DEFHASH})
     with open(CACHE, "w", newline="") as fh:
-        w = csv.DictWriter(fh, ["date", "rows", "hits", "hits4", "lead", "def"])
+        w = csv.DictWriter(fh, ["date", "rows", "hits", "hits4", "lead", "counts", "def"],
+                           extrasaction="ignore")
         w.writeheader()
         w.writerows(cache[d] for d in sorted(cache))
     return cache
@@ -135,28 +178,66 @@ def edge_granule(span_days: float) -> str:
 
 
 def window(cache, d0: date, width: int):
-    """One granule: its days, NULL days, and the relevant share over those present."""
+    """One granule: its days, NULL days, the share any entry matched, and each entry's share."""
     days = [(d0 + timedelta(days=i)).isoformat() for i in range(width)]
     got = [cache[d] for d in days if d in cache]
     rows = sum(int(c["rows"]) for c in got)
     hits = sum(int(c["hits"]) for c in got)
+    n = [0] * len(ENTRIES)
+    for c in got:
+        for k, v in enumerate(c["n"]):
+            n[k] += v
     return dict(start=d0, width=width, present=len(got), null=width - len(got),
-                share=(hits / rows if rows else None), hits=hits)
+                share=(hits / rows if rows else None), hits=hits, n=n,
+                shares=([v / rows for v in n] if rows else None))
+
+
+def rank(ref, v):
+    """Percentile rank of v in a sorted history: the share of it below v, ties counting half.
+    An entry at its usual zero reads 50, not 100; it rises only above its usual level."""
+    return 100.0 * (bisect_left(ref, v) + bisect_right(ref, v)) / (2 * len(ref)) if ref else float("nan")
+
+
+def read(ref, w):
+    """Each entry's percentile in its own history of granules this size, and their weighted mean."""
+    p = [rank(ref[0][k], s) for k, s in enumerate(w["shares"])]
+    t = 0.0
+    for k in range(len(p)):
+        t += WEIGHTS[k] * p[k]
+    return p, t / WSUM
 
 
 def reference(cache, width: int):
-    """The member's own history at this granule: every non-overlapping window."""
+    """The member's own history at this granule, from every non-overlapping window: each
+    entry's shares, sorted, and the windows' own readings, sorted."""
     ds = sorted(cache)
     if not ds:
-        return []
+        return [[] for _ in ENTRIES], []
     d0, end = date.fromisoformat(ds[0]), date.fromisoformat(ds[-1])
-    out = []
+    wins = []
     while d0 + timedelta(days=width - 1) <= end:
         w = window(cache, d0, width)
         if w["share"] is not None and w["present"] >= max(1, width // 2):
-            out.append(w["share"])
+            wins.append(w)
         d0 += timedelta(days=width)
-    return out
+    E = [sorted(w["shares"][k] for w in wins) for k in range(len(ENTRIES))]
+    return E, sorted(read((E, None), w)[1] for w in wins)
+
+
+def judge(w, ref, cut):
+    """Place a granule in the member's history: its reading's percentile, and the entries
+    at or above the cut in their own history, highest first."""
+    if w["shares"] is None:
+        w.update(pct=None, rose=[], p=None, index=None)
+        return w
+    p, index = read(ref, w)
+    w.update(p=p, index=index, pct=rank(ref[1], index),
+             rose=sorted((k for k in range(len(p)) if p[k] >= cut), key=lambda k: (-p[k], -w["n"][k])))
+    return w
+
+
+def rose(w, n=5):
+    return ", ".join(f"{label(k)} p{w['p'][k]:.0f}" for k in w["rose"][:n]) or "no entry at the cut"
 
 
 def micronodes(cache, start: date, stop: date, g: str, cut: float, refs, depth=0):
@@ -165,9 +246,8 @@ def micronodes(cache, start: date, stop: date, g: str, cut: float, refs, depth=0
     ref = refs.setdefault(width, reference(cache, width))
     out, d0 = [], start
     while d0 <= stop:
-        w = window(cache, d0, min(width, (stop - d0).days + 1))
+        w = judge(window(cache, d0, min(width, (stop - d0).days + 1)), ref, cut)
         w["granule"] = g
-        w["pct"] = pct(ref, w["share"]) if w["share"] is not None else None
         w["relevant"] = w["pct"] is not None and w["pct"] >= cut
         w["finer"] = (micronodes(cache, d0, d0 + timedelta(days=w["width"] - 1),
                                  FINER[g], cut, refs, depth + 1)
@@ -212,10 +292,10 @@ def edge_micronode_lines(cache, e, day: date, refs) -> list[str]:
     rel = [w for w in nodes if w["relevant"]]
     L.append(f"  - deemed relevant (percentile ≥ {cut:g}): {len(rel)} of {len(judged)} {g}s")
     for w in sorted(rel, key=lambda w: -w["pct"])[:6]:
-        L.append(f"    - {g} from {w['start']}: {w['share']:.2%} relevant, percentile {w['pct']:.0f}")
+        L.append(f"    - {g} from {w['start']}: percentile {w['pct']:.0f} — rose: {rose(w)}")
         for dd in sorted(relevant_days([w]) if g != "day" else [], key=lambda d: -d["pct"])[:3]:
             lead = cache[dd["start"].isoformat()].get("lead", "")
-            L.append(f"      - day {dd['start']}: percentile {dd['pct']:.0f} — {lead}")
+            L.append(f"      - day {dd['start']}: percentile {dd['pct']:.0f} — rose: {rose(dd, 3)} — {lead}")
         if g == "day":
             lead = cache.get(w["start"].isoformat(), {}).get("lead", "")
             if lead:
@@ -313,9 +393,9 @@ def main():
         lines.append(f"- {day}: **NULL** — GDELT published no archive. Not a quiet day; not zero.")
     else:
         today = read_day(day)
-        _, rows, hits, hits4, top = today
-        hist = [int(c["hits"]) / int(c["rows"]) for d, c in cache.items()
-                if d < day and int(c["rows"]) > 0]
+        _, rows, hits, hits4, top, _counts = today
+        cut = ORDERS["relevant_percentile"]
+        dw = judge(window(cache, D, 1), refs.setdefault(1, reference(cache, 1)), cut)
         hist4 = [int(c["hits4"]) / max(1, int(c["hits"])) for d, c in cache.items()
                  if d < day and int(c["hits"]) > 0]
         share = hits / rows if rows else 0
@@ -323,9 +403,14 @@ def main():
         z = f["z"] or "—"
         lines.append(f"- All of GDELT: {int(f['n_events']):,} events, z = {z} "
                      "(z is provisional this close to the end of the series).")
-        lines.append(f"- **Relevant** to the terms: {hits:,} events = {share:.2%} of the day — "
-                     f"percentile **{pct(hist, share):.0f}** against the previous {len(hist)} days.")
-        lines.append(f"- Of those, material conflict (CAMEO roots 15–20): {hits4:,} = {share4:.1%} — "
+        lines.append(f"- Matched by any entry: {hits:,} events = {share:.2%} of the day.")
+        lines.append(f"- **The day's reading** — the mean of the {len(ENTRIES)} entries' percentiles, each in "
+                     f"its own history of days — is {dw['index']:.1f}: percentile **{dw['pct']:.0f}** "
+                     "among the member's days.")
+        lines.append(f"- **Entries that rose** (at or above the {cut:g}th percentile of their own history): "
+                     + (", ".join(f"{label(k)} {dw['n'][k]:,} events, p{dw['p'][k]:.0f}" for k in dw["rose"][:12])
+                        or "none") + (f"; {len(dw['rose']) - 12} more" if len(dw["rose"]) > 12 else "") + ".")
+        lines.append(f"- Of the matched events, material conflict (CAMEO roots 15–20): {hits4:,} = {share4:.1%} — "
                      f"percentile **{pct(hist4, share4):.0f}**.")
         lines.append("")
         lines.append("Most-carried relevant events:")

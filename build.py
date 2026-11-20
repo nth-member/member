@@ -7,8 +7,9 @@ Writes, under docs/:
 
     data/sfo.json         REVOTT's 550 keys read in layers, and its 940 edges
     data/relevance.json   one entry per day of the URL era: the day's rows, the rows
-                          relevant to the member's terms, and the day's leading
-                          relevant event -- NULL where GDELT published no archive
+                          any entry matched, the day's leading matched event, and the
+                          events each entry matched -- NULL where GDELT published no
+                          archive; docs/relevance.js reads it as member.py does
     data/orders.json      the member's standing orders, relevance terms included
     data/journal.json     the list of journal entries
     journal/DAY.md        the entries themselves, written there by member.py
@@ -63,6 +64,9 @@ def main():
         "rows": [int(cache[d]["rows"]) if d in cache else None for d in days],
         "hits": [int(cache[d]["hits"]) if d in cache else None for d in days],
         "lead": [cache[d].get("lead", "") if d in cache else "" for d in days],
+        "entries": member.ENTRIES,
+        "counts": [[cache[d]["n"][k] if d in cache else None for d in days]
+                   for k in range(len(member.ENTRIES))],
     })
     dump("orders.json", member.ORDERS)
 
