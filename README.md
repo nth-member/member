@@ -145,8 +145,12 @@ at the author's word: "classify feeds in terms of geopolitical weight ... by cla
   The day's rows stay the denominator: an entry's share is its passing events per GDELT event.
 - **Settings** are `member.json`'s `filter`: θ, the classes, `min_hostility`, `pair_gate`, and
   `marks`. With `marks` "seed" the classes' words alone are used; "learned" adds the counts built from
-  the author's marks (`python3 filter/geofilter.py model MARKS OUT`), which are kept off the repos. A
-  change to the filter rebuilds the cache (about 13 minutes).
+  the author's marks. The marks themselves stay off the repos: the desk keeps them privately, and "sync
+  marks" copies them to `~/geofilter-marks` on the laptop (`filter/sync_marks.py`). Only at the author's
+  word, "use the learned filter", do the counts (each word's pass and drop tallies, never the headlines)
+  go into this repository as `filter/model.json`, with `marks` "learned" and `model` "filter/model.json",
+  so that the member's refresh and SOLID STAMP's run read the same counts. A change to the filter
+  rebuilds the cache (about 13 minutes).
 - **Along each edge** the journal and the page show, for every relevant day, the entries that drove
   its reading (the largest terms of its sum) and up to three passing items carrying them: the feed
   archive's headlines on days it covers, else GDELT's most-carried passing events

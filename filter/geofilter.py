@@ -248,7 +248,7 @@ def definition() -> str:
     blob = json.dumps({"classes": CLASSES, "settings": {k: v for k, v in s.items() if not k.startswith("_")},
                        "entries": json.loads((HERE / "cow" / "entries.json").read_text())}, sort_keys=True)
     if s.get("marks") == "learned":
-        blob += Path(s["model"]).expanduser().read_text()
+        blob += model_path(s).read_text()
     return hashlib.sha1(blob.encode()).hexdigest()[:10]
 
 
@@ -256,8 +256,15 @@ def load(settings: dict | None = None) -> Filter:
     """The filter as member.json's settings define it: the learned counts only when filter.marks is "learned"."""
     orders = json.loads((MEMBER / "member.json").read_text())
     s = settings if settings is not None else orders["filter"]
-    model = json.loads(Path(s["model"]).expanduser().read_text()) if s.get("marks") == "learned" else None
+    model = json.loads(model_path(s).read_text()) if s.get("marks") == "learned" else None
     return Filter(s, model)
+
+
+def model_path(s: dict) -> Path:
+    """The learned counts' file: as given if absolute or under ~, else relative to the member's repository
+    (filter/model.json, which SOLID STAMP's run checks out with filter/)."""
+    p = Path(s["model"]).expanduser()
+    return p if p.is_absolute() else MEMBER / p
 
 
 if __name__ == "__main__":
