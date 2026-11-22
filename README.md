@@ -2,7 +2,7 @@
 
 **REVOTT's numerator, working on its own.** Served at https://nth-member.github.io/member/.
 
-Every fixed Y in REVOTT generates a 550-node, 940-edge SFO over X:
+Every fixed Y in REVOTT generates a 550-node, 945-edge SFO over X:
 
     TNLDY = 14160 + 100·(Y + X)        date = the instant at which the Nsukka/Yg clock reads TNLDY
 
