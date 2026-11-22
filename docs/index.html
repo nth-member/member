@@ -70,6 +70,8 @@ button:hover{border-color:var(--muted)}
 .mn{font-size:12.5px;margin:6px 0 0;padding-left:0;list-style:none}
 .mn li{margin:3px 0;overflow-wrap:anywhere}
 .mn .d{margin-left:18px;color:var(--ink-2)}
+.mn .it{margin-left:34px;color:var(--ink-2)}
+.mn .it b{font-weight:600}
 details summary{cursor:pointer;color:var(--accent);font-size:12.5px;margin-top:6px}
 table{border-collapse:collapse;width:100%;font-size:13px}
 td,th{text-align:left;padding:5px 8px 5px 0;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
@@ -113,7 +115,11 @@ against the member's own history, refined where deemed relevant.</p>
 <div class="card">
   <h2>Open edges — and the micronodes along them</h2>
   <p class="note">Each edge is walked from its source to the instant in granules sized by its length (orders:
-    <span id="gbs"></span>). In every granule each relevance entry's share of the events is placed as a percentile rank (ties
+    <span id="gbs"></span>). Only events that pass the member's geopolitical filter are counted: its classes come from the
+    Correlates of War codebooks (war, militarized disputes, alignment, diplomatic representation, territorial change, capability),
+    with five more not from COW (agreement and negotiation, sanctions, internal power, holy places and religion, economic statecraft);
+    a GDELT event is read through the words of its article's address and classed by its CAMEO code. Each relevant day lists the
+    entries that drove its reading and up to three passing items carrying them. In every granule each relevance entry's share of the events is placed as a percentile rank (ties
     counting half) in that entry's own history of granules the same size; the granule's reading is the sum of the entries' shares above their own medians (each entry's excess over its own median share, summed; an entry below its median adds nothing), placed in turn as a
     percentile in the member's own history of granules that size. "Rose" names the entries at or above the cut in their own
     history. At or above the <span id="cut"></span>th the granule is deemed relevant (red) and refined to the next
@@ -183,6 +189,19 @@ function granuleFor(span){for(const [g,lim] of O.granule_by_span_days) if(span<=
 const walk=(i0,i1,g)=>RL.walk(i0,i1,g,O.relevant_percentile,GD,FINER);
 function relDays(ns){let o=[];for(const n of ns){if(n.g==="day"&&n.rel)o.push(n);o=o.concat(relDays(n.finer));}return o;}
 const idxDate=i=>iso(R0()+i*DAY);
+/* each day's drivers (the largest terms of its reading) and up to three passing items carrying them,
+   from data/items/YEAR.json, loaded when a year is first shown */
+const SHARD={}, PENDING={};
+function dayItems(i){const d=idxDate(i), y=d.slice(0,4);
+  if(SHARD[y]) return SHARD[y][d]||{d:[],i:[]};
+  if(!PENDING[y]) PENDING[y]=fetch("data/items/"+y+".json",{cache:"no-cache"}).then(r=>r.ok?r.json():{}).catch(()=>({}))
+    .then(j=>{SHARD[y]=j;draw();});
+  return null;}
+function itemsHtml(i){const x=dayItems(i);
+  if(x==null) return '<div class="it muted">items loading …</div>';
+  if(!x.d.length) return '';
+  return '<div class="it">drove it: '+esc(x.d.map(lab).join(", "))+'</div>'+x.i.map(([c,h,t,u,s])=>'<div class="it"><b>'
+    +esc(c+(h==null?"":" "+h))+'</b> · <a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(t)+'</a> — '+esc(s)+'</div>').join("");}
 
 /* ---- introspection ---- */
 function read(){
@@ -255,7 +274,7 @@ function draw(){
           const days=gr==="day"?[n]:relDays([n]).sort((p,q)=>q.pct-p.pct).slice(0,3);
           return '<li><span class="mono">'+gr+' from '+idxDate(n.i0)+'</span> — percentile <b>'
             +n.pct.toFixed(0)+'</b> · rose: '+esc(rose(n,5))+days.map(d=>'<div class="d"><a class="mono" href="'+gdelt(idxDate(d.i0))+'" target="_blank" rel="noopener">'
-            +idxDate(d.i0)+'</a> · percentile '+d.pct.toFixed(0)+' · rose: '+esc(rose(d,3))+' · '+esc(R.lead[d.i0]||"")+'</div>').join("")+'</li>';
+            +idxDate(d.i0)+'</a> · percentile '+d.pct.toFixed(0)+' · rose: '+esc(rose(d,3))+'</div>'+itemsHtml(d.i0)).join("")+'</li>';
         }).join("")+(top.length>12?'<li class="muted">… '+(top.length-12)+' more</li>':'')+'</ul></details>';
     }
     return h+'</div>';

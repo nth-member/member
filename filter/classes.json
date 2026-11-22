@@ -1,0 +1,1613 @@
+{
+ "_note": "The member's geopolitical filter: its classes, where each comes from, its codes, and the words each class starts from. An item passes when its weight G reaches theta and its class is among the classes chosen in member.json's filter. The six COW classes are defined by the Correlates of War codebooks; the five marked cow:false are not from COW. Words are matched as whole token sequences after lower-casing, removing accents and splitting on anything but letters, digits and apostrophes. The author's pass/drop marks correct the words (see filter/geofilter.py).",
+ "version": "2026-11-22",
+ "seed_odds": 4,
+ "class_seed_count": 2,
+ "precedence": [
+  "war",
+  "dispute",
+  "sanctions",
+  "territory",
+  "representation",
+  "alignment",
+  "negotiation",
+  "rule",
+  "religion",
+  "capability",
+  "economy"
+ ],
+ "classes": [
+  {
+   "id": "war",
+   "name": "War",
+   "cow": true,
+   "source": "COW War Data v4.0 (inter-, extra- and non-state wars) and v5.1 (intra-state wars)",
+   "codes": "War type 1 inter-state; 2 colonial, 3 imperial (extra-state); 4 civil war for central control, 5 civil war over local issues, 6 regional internal, 7 intercommunal (intra-state); 8 non-state war in non-state territory, 9 non-state war across state borders. A war is sustained combat with at least 1,000 battle-related deaths in twelve months. MID hostility level 5.",
+   "terms": [
+    {
+     "forms": [
+      "war",
+      "wars"
+     ],
+     "h": 5,
+     "src": "COW war typology: inter-state, extra-state, intra-state and non-state wars"
+    },
+    {
+     "forms": [
+      "civil war",
+      "civil wars"
+     ],
+     "h": 5,
+     "src": "COW intra-state war types 4 and 5: civil war for central control, over local issues"
+    },
+    {
+     "forms": [
+      "colonial war",
+      "imperial war"
+     ],
+     "h": 5,
+     "src": "COW extra-state war types 2 and 3: colonial, imperial"
+    },
+    {
+     "forms": [
+      "intercommunal",
+      "inter communal"
+     ],
+     "h": 5,
+     "src": "COW intra-state war type 7: intercommunal"
+    },
+    {
+     "forms": [
+      "battle deaths",
+      "battle related deaths"
+     ],
+     "h": 5,
+     "src": "COW war threshold: 1,000 battle-related deaths in twelve months"
+    }
+   ]
+  },
+  {
+   "id": "dispute",
+   "name": "Militarized dispute",
+   "cow": true,
+   "source": "COW Militarized Interstate Disputes 5.0 (1816-2014): MID 5.0 codebook and incident coding manual",
+   "codes": "Hostility level 1 no militarized action, 2 threat to use force, 3 display of force, 4 use of force, 5 war. Highest action: threats 1 use force, 2 blockade, 3 occupy territory, 4 declare war, 5 use CBR weapons, 6 join war [level 2]; displays 7 show of force, 8 alert, 9 nuclear alert, 10 mobilization, 11 fortify border, 12 border violation [3]; uses 13 blockade, 14 occupation of territory, 15 seizure, 16 attack, 17 clash, 18 declaration of war, 19 use of CBR weapons [4]; 20 begin, 21 join interstate war [5]. Fatality level 0-6. COW codes these for state forces; here they are read for any armed actor.",
+   "terms": [
+    {
+     "forms": [
+      "threat",
+      "threats",
+      "threaten",
+      "threatens",
+      "threatened",
+      "threatening"
+     ],
+     "h": 2,
+     "needs": [
+      "force",
+      "forces",
+      "armed forces",
+      "military",
+      "fire upon",
+      "territory",
+      "blockade",
+      "seal off",
+      "occupy",
+      "occupation",
+      "declaration of war",
+      "war",
+      "chemical",
+      "bacteriological",
+      "radiological",
+      "weapons"
+     ],
+     "src": "MID threats of force (actions 1-6): to use force, blockade, occupy territory, declare war, use CBR weapons, join a war"
+    },
+    {
+     "forms": [
+      "show of force",
+      "shows of force"
+     ],
+     "h": 3,
+     "src": "MID action 7: show of force"
+    },
+    {
+     "forms": [
+      "military exercise",
+      "military exercises",
+      "maneuver",
+      "maneuvers",
+      "manoeuvre",
+      "manoeuvres",
+      "naval patrol",
+      "naval patrols",
+      "territorial waters",
+      "airspace",
+      "air space"
+     ],
+     "h": 3,
+     "src": "MID incident manual, show of force: non-routine maneuvers and military exercises, naval patrols outside territorial waters, violation of territorial waters or air space"
+    },
+    {
+     "forms": [
+      "alert",
+      "alerts"
+     ],
+     "h": 3,
+     "needs": [
+      "military",
+      "nuclear",
+      "armed forces",
+      "forces",
+      "readiness"
+     ],
+     "src": "MID actions 8 and 9: alert, nuclear alert (increased military readiness)"
+    },
+    {
+     "forms": [
+      "military readiness",
+      "nuclear alert"
+     ],
+     "h": 3,
+     "src": "MID incident manual: alert, nuclear alert"
+    },
+    {
+     "forms": [
+      "mobilization",
+      "mobilisation",
+      "mobilize",
+      "mobilise",
+      "mobilizes",
+      "mobilises",
+      "mobilized",
+      "mobilised",
+      "mobilizing",
+      "mobilising",
+      "reserve forces"
+     ],
+     "h": 3,
+     "src": "MID action 10: mobilization of (reserve) forces"
+    },
+    {
+     "forms": [
+      "border fortification",
+      "fortify",
+      "fortifies",
+      "fortified",
+      "fortification",
+      "fortifications"
+     ],
+     "h": 3,
+     "src": "MID action 11: fortify border"
+    },
+    {
+     "forms": [
+      "border violation",
+      "border violations"
+     ],
+     "h": 3,
+     "src": "MID action 12: border violation"
+    },
+    {
+     "forms": [
+      "blockade",
+      "blockades",
+      "blockaded"
+     ],
+     "h": 4,
+     "src": "MID action 13: blockade"
+    },
+    {
+     "forms": [
+      "occupation",
+      "occupy",
+      "occupies",
+      "occupied",
+      "occupying"
+     ],
+     "h": 4,
+     "src": "MID action 14: occupation of territory"
+    },
+    {
+     "forms": [
+      "seizure",
+      "seizures",
+      "seize",
+      "seizes",
+      "seized",
+      "seizing",
+      "capture",
+      "captures",
+      "captured",
+      "capturing"
+     ],
+     "h": 4,
+     "src": "MID action 15: seizure, the capture of another state's material or personnel"
+    },
+    {
+     "forms": [
+      "attack",
+      "attacks",
+      "attacked",
+      "attacking",
+      "fire upon",
+      "fired upon",
+      "fires upon"
+     ],
+     "h": 4,
+     "src": "MID action 16: attack, armed forces fire upon another state's forces, population or territory"
+    },
+    {
+     "forms": [
+      "strike",
+      "strikes"
+     ],
+     "h": 4,
+     "src": "MID incident manual, attack: strikes by unmanned drones"
+    },
+    {
+     "forms": [
+      "clash",
+      "clashes",
+      "clashed",
+      "clashing",
+      "hostilities"
+     ],
+     "h": 4,
+     "src": "MID action 17: clash, sustained military hostilities"
+    },
+    {
+     "forms": [
+      "declaration of war",
+      "declares war",
+      "declared war",
+      "declare war",
+      "declaring war"
+     ],
+     "h": 4,
+     "src": "MID action 18: declaration of war"
+    },
+    {
+     "forms": [
+      "chemical weapon",
+      "chemical weapons",
+      "radiological",
+      "bacteriological"
+     ],
+     "h": 4,
+     "src": "MID action 19: use of CBR (chemical, bacteriological, radiological) weapons"
+    }
+   ]
+  },
+  {
+   "id": "alignment",
+   "name": "Alignment",
+   "cow": true,
+   "source": "COW Formal Alliances v4.1 (1816-2012); Defense Cooperation Agreement Dataset (1980-2010); Intergovernmental Organizations v3 (1815-2014)",
+   "codes": "Alliance type I defense pact, IIa neutrality, IIb non-aggression, III entente. Defense cooperation agreements: framework treaties for routine defence cooperation. IGO status 0 none, 1 full member, 2 associate member, 3 observer.",
+   "terms": [
+    {
+     "forms": [
+      "alliance",
+      "alliances"
+     ],
+     "src": "COW Formal Alliances v4.1"
+    },
+    {
+     "forms": [
+      "defense pact",
+      "defence pact",
+      "defense pacts",
+      "defence pacts",
+      "mutual defense",
+      "mutual defence"
+     ],
+     "src": "Formal Alliances type I: defense pact"
+    },
+    {
+     "forms": [
+      "neutrality",
+      "neutrality pact"
+     ],
+     "src": "Formal Alliances type IIa: neutrality"
+    },
+    {
+     "forms": [
+      "non aggression",
+      "nonaggression"
+     ],
+     "src": "Formal Alliances type IIb: non-aggression"
+    },
+    {
+     "forms": [
+      "entente",
+      "ententes"
+     ],
+     "src": "Formal Alliances type III: entente"
+    },
+    {
+     "forms": [
+      "treaty",
+      "treaties"
+     ],
+     "src": "COW data sets: mutual defense pacts, non-aggression treaties and ententes"
+    },
+    {
+     "forms": [
+      "defense cooperation",
+      "defence cooperation"
+     ],
+     "src": "COW Defense Cooperation Agreement Dataset"
+    },
+    {
+     "forms": [
+      "joint military exercises",
+      "peacekeeping",
+      "peacekeepers",
+      "arms trade",
+      "procurement",
+      "officer exchanges",
+      "joint weapons"
+     ],
+     "src": "DCAD: joint military exercises, joint peacekeeping operations, joint weapons programs, procurement and arms trade, officer exchanges"
+    },
+    {
+     "forms": [
+      "membership",
+      "full member",
+      "associate member",
+      "observer status",
+      "intergovernmental organization",
+      "intergovernmental organisation",
+      "intergovernmental organizations",
+      "intergovernmental organisations"
+     ],
+     "src": "COW IGO v3: membership 1 full, 2 associate, 3 observer"
+    }
+   ]
+  },
+  {
+   "id": "representation",
+   "name": "Diplomatic representation",
+   "cow": true,
+   "source": "COW Diplomatic Exchange 2006.1 (1817-2005); State System Membership v2024 (diplomatic missions)",
+   "codes": "Representation 0 none, 1 charge d'affaires, 2 minister, 3 ambassador, 9 other. An ambassador expelled, recalled or withdrawn is coded 1.",
+   "terms": [
+    {
+     "forms": [
+      "ambassador",
+      "ambassadors",
+      "charge d'affaires",
+      "minister plenipotentiary",
+      "envoy",
+      "envoys",
+      "embassy",
+      "embassies"
+     ],
+     "src": "Diplomatic Exchange: charge d'affaires, minister, ambassador"
+    },
+    {
+     "forms": [
+      "diplomatic",
+      "diplomat",
+      "diplomats",
+      "diplomatic mission",
+      "diplomatic missions",
+      "diplomatic representation",
+      "diplomatic recognition"
+     ],
+     "src": "Diplomatic Exchange; State System Membership: diplomatic missions"
+    },
+    {
+     "forms": [
+      "expel",
+      "expels",
+      "expelled",
+      "expulsion",
+      "expulsions",
+      "recall",
+      "recalls",
+      "recalled",
+      "withdraw",
+      "withdraws",
+      "withdrew",
+      "withdrawn"
+     ],
+     "needs": [
+      "ambassador",
+      "ambassadors",
+      "charge d'affaires",
+      "envoy",
+      "envoys",
+      "embassy",
+      "embassies",
+      "diplomat",
+      "diplomats",
+      "diplomatic"
+     ],
+     "src": "Diplomatic Exchange: an ambassador expelled, recalled or withdrawn"
+    }
+   ]
+  },
+  {
+   "id": "territory",
+   "name": "Territorial change",
+   "cow": true,
+   "source": "COW Territorial Change v6 (1816-2018); MID issue type 1; Direct Contiguity v3.2",
+   "codes": "Procedure 1 conquest, 2 annexation, 3 cession, 4 secession, 5 unification, 6 mandated territory. MID issue type 1 territory.",
+   "terms": [
+    {
+     "forms": [
+      "conquest",
+      "conquests",
+      "conquer",
+      "conquers",
+      "conquered"
+     ],
+     "src": "Territorial Change procedure 1: conquest"
+    },
+    {
+     "forms": [
+      "annexation",
+      "annex",
+      "annexes",
+      "annexed",
+      "annexing"
+     ],
+     "src": "procedure 2: annexation"
+    },
+    {
+     "forms": [
+      "cession",
+      "cede",
+      "cedes",
+      "ceded",
+      "ceding"
+     ],
+     "src": "procedure 3: cession"
+    },
+    {
+     "forms": [
+      "secession",
+      "secede",
+      "secedes",
+      "seceded",
+      "secessionist",
+      "secessionists"
+     ],
+     "src": "procedure 4: secession"
+    },
+    {
+     "forms": [
+      "unification",
+      "reunification",
+      "unify",
+      "unifies"
+     ],
+     "src": "procedure 5: unification"
+    },
+    {
+     "forms": [
+      "mandated territory",
+      "mandated territories"
+     ],
+     "src": "procedure 6: mandated territory"
+    },
+    {
+     "forms": [
+      "plebiscite",
+      "plebiscites"
+     ],
+     "src": "Territorial Change manual: cession through plebiscite"
+    },
+    {
+     "forms": [
+      "independence",
+      "sovereignty"
+     ],
+     "src": "Territorial Change: the Independence variable; annexation extends sovereignty"
+    },
+    {
+     "forms": [
+      "territory",
+      "territories",
+      "territorial"
+     ],
+     "src": "Territorial Change v6; MID issue type 1 territory"
+    },
+    {
+     "forms": [
+      "border",
+      "borders",
+      "boundary",
+      "boundaries"
+     ],
+     "src": "Direct Contiguity v3.2: land boundary"
+    }
+   ]
+  },
+  {
+   "id": "capability",
+   "name": "Capability",
+   "cow": true,
+   "source": "COW National Material Capabilities v7.0 (1816-2022); Arms Technology v1.1 (1816-2023)",
+   "codes": "Military expenditure, military personnel, energy consumption, iron and steel production, urban population, total population, combined as CINC. Arms technologies: small arms, machine guns, artillery, tanks, fighter aircraft, combat helicopters, armed UAVs; ballistic missiles and ICBMs (v1.1).",
+   "terms": [
+    {
+     "forms": [
+      "military expenditure",
+      "military expenditures",
+      "military personnel",
+      "energy consumption",
+      "iron and steel",
+      "steel production",
+      "steel",
+      "urban population",
+      "total population",
+      "population"
+     ],
+     "src": "NMC v7.0: the six components of CINC"
+    },
+    {
+     "forms": [
+      "troops",
+      "armed forces",
+      "military forces"
+     ],
+     "src": "COW war codebooks (1,000 troops committed); MID definitions (regular armed forces)"
+    },
+    {
+     "forms": [
+      "small arms",
+      "rifle",
+      "rifles",
+      "machine gun",
+      "machine guns",
+      "artillery",
+      "tank",
+      "tanks",
+      "fighter aircraft",
+      "fighter jet",
+      "fighter jets",
+      "jet fighter",
+      "jet fighters",
+      "combat helicopter",
+      "combat helicopters",
+      "armed uav",
+      "armed uavs",
+      "uav",
+      "uavs",
+      "drone",
+      "drones"
+     ],
+     "src": "Arms Technology v1.1: small arms, machine guns, artillery, tanks, fighter aircraft, combat helicopters, armed UAVs; MID: unmanned drones"
+    },
+    {
+     "forms": [
+      "ballistic missile",
+      "ballistic missiles",
+      "intercontinental ballistic missile",
+      "intercontinental ballistic missiles",
+      "icbm",
+      "icbms",
+      "missile",
+      "missiles"
+     ],
+     "src": "Arms Technology v1.1: ballistic missiles and ICBMs"
+    },
+    {
+     "forms": [
+      "nuclear",
+      "nuclear forces"
+     ],
+     "src": "MID action 9: nuclear alert (nuclear forces)"
+    }
+   ]
+  },
+  {
+   "id": "negotiation",
+   "name": "Agreement and negotiation",
+   "cow": false,
+   "source": "Not from COW. CAMEO event codes (the coding GDELT uses): 02, 03, 04, 057, 087, 10, 12, 13, 16",
+   "codes": "CAMEO 04 consult (041 discuss by telephone, 042 make a visit, 043 host a visit, 044 meet at a third location, 045 mediate, 046 engage in negotiation); 026-028, 036-039 meet, negotiate, settle, mediate; 057 sign formal agreement; 087 de-escalate, 0871 declare truce, ceasefire; 105, 107, 108; 125-127; 134-135; 164-165.",
+   "terms": [
+    {
+     "forms": [
+      "negotiation",
+      "negotiations",
+      "negotiate",
+      "negotiates",
+      "negotiated",
+      "negotiating",
+      "negotiator",
+      "negotiators"
+     ],
+     "src": "CAMEO 046 engage in negotiation; 036, 108, 125, 134, 164"
+    },
+    {
+     "forms": [
+      "mediation",
+      "mediate",
+      "mediates",
+      "mediated",
+      "mediating",
+      "mediator",
+      "mediators"
+     ],
+     "src": "CAMEO 045 mediate; 028, 038, 039, 105, 126, 135, 165"
+    },
+    {
+     "forms": [
+      "ceasefire",
+      "ceasefires",
+      "cease fire",
+      "truce",
+      "truces"
+     ],
+     "src": "CAMEO 0871 declare truce, ceasefire; 107 demand ceasefire; 196 violate ceasefire"
+    },
+    {
+     "forms": [
+      "agreement",
+      "agreements",
+      "formal agreement"
+     ],
+     "src": "CAMEO 057 sign formal agreement; 127"
+    },
+    {
+     "forms": [
+      "settle dispute",
+      "settle the dispute"
+     ],
+     "src": "CAMEO 027, 037: settle dispute"
+    },
+    {
+     "forms": [
+      "visit",
+      "visits",
+      "visited",
+      "visiting",
+      "meet",
+      "meets",
+      "meeting",
+      "meetings",
+      "discuss",
+      "discusses",
+      "discussed",
+      "discussion",
+      "discussions"
+     ],
+     "src": "CAMEO 04 consult: 041 discuss by telephone, 042 make a visit, 043 host a visit, 044 meet at a third location; 036 meet or negotiate"
+    }
+   ]
+  },
+  {
+   "id": "sanctions",
+   "name": "Sanctions and other pressure",
+   "cow": false,
+   "source": "Not from COW. CAMEO event codes 163, 1312, 085, 139",
+   "codes": "CAMEO 163 impose embargo, boycott, or sanctions; 1312 threaten to boycott, embargo, or sanction; 085 ease economic sanctions, boycott, embargo (and 0254, 0354, 1054, 1244); 139 give ultimatum.",
+   "terms": [
+    {
+     "forms": [
+      "sanction",
+      "sanctions",
+      "sanctioned",
+      "sanctioning"
+     ],
+     "src": "CAMEO 163, 1312, 085"
+    },
+    {
+     "forms": [
+      "embargo",
+      "embargoes",
+      "embargoed"
+     ],
+     "src": "CAMEO 163, 1312, 085"
+    },
+    {
+     "forms": [
+      "boycott",
+      "boycotts",
+      "boycotted",
+      "boycotting"
+     ],
+     "src": "CAMEO 163, 1312, 143"
+    },
+    {
+     "forms": [
+      "ultimatum",
+      "ultimatums"
+     ],
+     "src": "CAMEO 139 give ultimatum"
+    }
+   ]
+  },
+  {
+   "id": "rule",
+   "name": "Internal power",
+   "cow": false,
+   "source": "Not from COW. CAMEO event codes 14, 024/034/104/083/123, 172, 175, 133, 137",
+   "codes": "CAMEO 14 protest (141 demonstrate or rally, 142 hunger strike, 143 strike or boycott, 144 obstruct passage, 145 protest violently, riot); change in leadership (0241, 0341, 1041, 0831, 1231); change in institutions, regime (0244, 0344, 1044, 0834, 1234); political reform (024, 034, 104); 1721 restrictions on political freedoms, 1722 ban political parties, 1723 curfew, 1724 state of emergency or martial law; 175 violent repression; 133, 082 political dissent.",
+   "terms": [
+    {
+     "forms": [
+      "protest",
+      "protests",
+      "protester",
+      "protesters",
+      "protestor",
+      "protestors",
+      "protested",
+      "protesting"
+     ],
+     "src": "CAMEO 14 protest; 133"
+    },
+    {
+     "forms": [
+      "demonstration",
+      "demonstrations",
+      "demonstrator",
+      "demonstrators",
+      "demonstrate",
+      "demonstrates",
+      "rally",
+      "rallies"
+     ],
+     "src": "CAMEO 141 demonstrate or rally"
+    },
+    {
+     "forms": [
+      "hunger strike",
+      "hunger strikes"
+     ],
+     "src": "CAMEO 142 conduct hunger strike"
+    },
+    {
+     "forms": [
+      "riot",
+      "riots",
+      "rioting",
+      "rioters"
+     ],
+     "src": "CAMEO 145 protest violently, riot"
+    },
+    {
+     "forms": [
+      "leadership change",
+      "change in leadership",
+      "regime",
+      "regimes",
+      "regime change"
+     ],
+     "src": "CAMEO 0241, 0341, 1041, 0831, 1231 change in leadership; 0244, 0344, 1044 change in institutions, regime"
+    },
+    {
+     "forms": [
+      "political reform",
+      "political reforms",
+      "political freedoms",
+      "political parties",
+      "political party"
+     ],
+     "src": "CAMEO 024, 034, 104 political reform; 1721 political freedoms; 1722 ban political parties"
+    },
+    {
+     "forms": [
+      "curfew",
+      "curfews",
+      "martial law",
+      "state of emergency"
+     ],
+     "src": "CAMEO 1723 curfew; 1724 state of emergency or martial law"
+    },
+    {
+     "forms": [
+      "repression",
+      "dissent"
+     ],
+     "src": "CAMEO 175 violent repression; 082, 133 political dissent"
+    }
+   ]
+  },
+  {
+   "id": "religion",
+   "name": "Holy places and religion",
+   "cow": false,
+   "source": "Not from COW as events: COW's World Religion Data counts adherents and records no events. Its religions and families give the words, with the author's holy-place entries.",
+   "codes": "World Religion Data v1.1: Christianity (Protestant, Roman Catholic, Eastern Orthodox, Anglican), Judaism (Orthodox, Conservative, Reform), Islam (Sunni, Shi'a, Ibadhi, Nation of Islam, Alawite, Ahmadiyya), Buddhism (Mahayana, Theravada), Zoroastrian, Hindu, Sikh, Shinto, Baha'i, Taoism, Jain, Confucianism, Syncretic, Animist. The author's entries 0000014, 0000016, 0000017, 0000019, 0000025 (East Jerusalem), 0000072.",
+   "terms": [
+    {
+     "forms": [
+      "christianity",
+      "christian",
+      "christians",
+      "protestant",
+      "protestants",
+      "catholic",
+      "catholics",
+      "roman catholic",
+      "roman catholics",
+      "orthodox",
+      "anglican",
+      "anglicans"
+     ],
+     "src": "World Religion Data: Christianity and its families"
+    },
+    {
+     "forms": [
+      "judaism",
+      "jewish",
+      "jew",
+      "jews"
+     ],
+     "src": "World Religion Data: Judaism"
+    },
+    {
+     "forms": [
+      "islam",
+      "islamic",
+      "muslim",
+      "muslims",
+      "sunni",
+      "sunnis",
+      "shia",
+      "shi'a",
+      "shiite",
+      "shiites",
+      "shi'ite",
+      "ibadhi",
+      "nation of islam",
+      "alawite",
+      "alawites",
+      "ahmadiyya"
+     ],
+     "src": "World Religion Data: Islam and its families"
+    },
+    {
+     "forms": [
+      "buddhism",
+      "buddhist",
+      "buddhists",
+      "mahayana",
+      "theravada",
+      "zoroastrian",
+      "zoroastrians",
+      "hindu",
+      "hindus",
+      "hinduism",
+      "sikh",
+      "sikhs",
+      "shinto",
+      "baha'i",
+      "bahai",
+      "taoism",
+      "taoist",
+      "jain",
+      "jains",
+      "jainism",
+      "confucianism",
+      "confucian",
+      "animist",
+      "animism"
+     ],
+     "src": "World Religion Data: the other religions"
+    },
+    {
+     "forms": [
+      "jerusalem",
+      "east jerusalem",
+      "temple mount",
+      "al aqsa",
+      "mecca",
+      "vatican",
+      "vatican city",
+      "holy see"
+     ],
+     "src": "The author's entries: Jerusalem, Temple Mount, Al-Aqsa, Mecca, East Jerusalem, Vatican"
+    }
+   ]
+  },
+  {
+   "id": "economy",
+   "name": "Economic statecraft",
+   "cow": false,
+   "source": "Not from COW, except its trade flows: COW Trade v4.0 (1870-2014); CAMEO economic codes",
+   "codes": "COW Trade v4.0: national and bilateral trade flows. CAMEO 061 cooperate economically (0211, 0311, 1011, 1211); 071 provide economic aid (0231, 0331, 1031, 1221); 1621 reduce or stop economic assistance; 1311 threaten to reduce or stop aid.",
+   "terms": [
+    {
+     "forms": [
+      "trade",
+      "imports",
+      "import",
+      "exports",
+      "export"
+     ],
+     "src": "COW Trade v4.0: national and bilateral trade flows"
+    },
+    {
+     "forms": [
+      "economic cooperation",
+      "cooperate economically",
+      "economic aid",
+      "economic assistance"
+     ],
+     "src": "CAMEO 061, 0211, 0311, 1011, 1211; 071, 0231, 0331, 1031, 1221; 1621"
+    }
+   ]
+  }
+ ],
+ "cameo": [
+  [
+   "0211",
+   "economy",
+   null
+  ],
+  [
+   "0212",
+   "alignment",
+   null
+  ],
+  [
+   "0214",
+   "alignment",
+   null
+  ],
+  [
+   "0231",
+   "economy",
+   null
+  ],
+  [
+   "0232",
+   "alignment",
+   null
+  ],
+  [
+   "0234",
+   "alignment",
+   null
+  ],
+  [
+   "0241",
+   "rule",
+   null
+  ],
+  [
+   "0244",
+   "rule",
+   null
+  ],
+  [
+   "0251",
+   "rule",
+   null
+  ],
+  [
+   "0252",
+   "rule",
+   null
+  ],
+  [
+   "0254",
+   "sanctions",
+   null
+  ],
+  [
+   "0256",
+   "negotiation",
+   null
+  ],
+  [
+   "0311",
+   "economy",
+   null
+  ],
+  [
+   "0312",
+   "alignment",
+   null
+  ],
+  [
+   "0314",
+   "alignment",
+   null
+  ],
+  [
+   "0331",
+   "economy",
+   null
+  ],
+  [
+   "0332",
+   "alignment",
+   null
+  ],
+  [
+   "0334",
+   "alignment",
+   null
+  ],
+  [
+   "0341",
+   "rule",
+   null
+  ],
+  [
+   "0344",
+   "rule",
+   null
+  ],
+  [
+   "0351",
+   "rule",
+   null
+  ],
+  [
+   "0352",
+   "rule",
+   null
+  ],
+  [
+   "0354",
+   "sanctions",
+   null
+  ],
+  [
+   "0356",
+   "negotiation",
+   null
+  ],
+  [
+   "0811",
+   "rule",
+   null
+  ],
+  [
+   "0812",
+   "rule",
+   null
+  ],
+  [
+   "0813",
+   "rule",
+   null
+  ],
+  [
+   "0814",
+   "rule",
+   null
+  ],
+  [
+   "0831",
+   "rule",
+   null
+  ],
+  [
+   "0834",
+   "rule",
+   null
+  ],
+  [
+   "0861",
+   "alignment",
+   null
+  ],
+  [
+   "0862",
+   "alignment",
+   null
+  ],
+  [
+   "0871",
+   "negotiation",
+   null
+  ],
+  [
+   "0872",
+   "negotiation",
+   null
+  ],
+  [
+   "0873",
+   "negotiation",
+   null
+  ],
+  [
+   "0874",
+   "negotiation",
+   null
+  ],
+  [
+   "1011",
+   "economy",
+   null
+  ],
+  [
+   "1012",
+   "alignment",
+   null
+  ],
+  [
+   "1014",
+   "alignment",
+   null
+  ],
+  [
+   "1031",
+   "economy",
+   null
+  ],
+  [
+   "1032",
+   "alignment",
+   null
+  ],
+  [
+   "1034",
+   "alignment",
+   null
+  ],
+  [
+   "1041",
+   "rule",
+   null
+  ],
+  [
+   "1044",
+   "rule",
+   null
+  ],
+  [
+   "1051",
+   "rule",
+   null
+  ],
+  [
+   "1052",
+   "rule",
+   null
+  ],
+  [
+   "1054",
+   "sanctions",
+   null
+  ],
+  [
+   "1056",
+   "negotiation",
+   null
+  ],
+  [
+   "1211",
+   "economy",
+   null
+  ],
+  [
+   "1212",
+   "alignment",
+   null
+  ],
+  [
+   "1221",
+   "economy",
+   null
+  ],
+  [
+   "1222",
+   "alignment",
+   null
+  ],
+  [
+   "1224",
+   "alignment",
+   null
+  ],
+  [
+   "1231",
+   "rule",
+   null
+  ],
+  [
+   "1234",
+   "rule",
+   null
+  ],
+  [
+   "1241",
+   "rule",
+   null
+  ],
+  [
+   "1242",
+   "rule",
+   null
+  ],
+  [
+   "1244",
+   "sanctions",
+   null
+  ],
+  [
+   "1246",
+   "negotiation",
+   null
+  ],
+  [
+   "1311",
+   "economy",
+   null
+  ],
+  [
+   "1312",
+   "sanctions",
+   null
+  ],
+  [
+   "1313",
+   "representation",
+   null
+  ],
+  [
+   "1321",
+   "rule",
+   null
+  ],
+  [
+   "1322",
+   "rule",
+   null
+  ],
+  [
+   "1323",
+   "rule",
+   null
+  ],
+  [
+   "1324",
+   "rule",
+   null
+  ],
+  [
+   "1381",
+   "dispute",
+   2
+  ],
+  [
+   "1382",
+   "dispute",
+   2
+  ],
+  [
+   "1383",
+   "dispute",
+   2
+  ],
+  [
+   "1384",
+   "dispute",
+   2
+  ],
+  [
+   "1385",
+   "dispute",
+   2
+  ],
+  [
+   "1621",
+   "economy",
+   null
+  ],
+  [
+   "1622",
+   "alignment",
+   null
+  ],
+  [
+   "1661",
+   "alignment",
+   null
+  ],
+  [
+   "1721",
+   "rule",
+   null
+  ],
+  [
+   "1722",
+   "rule",
+   null
+  ],
+  [
+   "1723",
+   "rule",
+   null
+  ],
+  [
+   "1724",
+   "rule",
+   null
+  ],
+  [
+   "024",
+   "rule",
+   null
+  ],
+  [
+   "026",
+   "negotiation",
+   null
+  ],
+  [
+   "027",
+   "negotiation",
+   null
+  ],
+  [
+   "028",
+   "negotiation",
+   null
+  ],
+  [
+   "034",
+   "rule",
+   null
+  ],
+  [
+   "036",
+   "negotiation",
+   null
+  ],
+  [
+   "037",
+   "negotiation",
+   null
+  ],
+  [
+   "038",
+   "negotiation",
+   null
+  ],
+  [
+   "039",
+   "negotiation",
+   null
+  ],
+  [
+   "054",
+   "representation",
+   null
+  ],
+  [
+   "057",
+   "negotiation",
+   null
+  ],
+  [
+   "061",
+   "economy",
+   null
+  ],
+  [
+   "062",
+   "alignment",
+   null
+  ],
+  [
+   "064",
+   "alignment",
+   null
+  ],
+  [
+   "071",
+   "economy",
+   null
+  ],
+  [
+   "072",
+   "alignment",
+   null
+  ],
+  [
+   "074",
+   "alignment",
+   null
+  ],
+  [
+   "081",
+   "rule",
+   null
+  ],
+  [
+   "082",
+   "rule",
+   null
+  ],
+  [
+   "083",
+   "rule",
+   null
+  ],
+  [
+   "085",
+   "sanctions",
+   null
+  ],
+  [
+   "087",
+   "negotiation",
+   null
+  ],
+  [
+   "104",
+   "rule",
+   null
+  ],
+  [
+   "105",
+   "negotiation",
+   null
+  ],
+  [
+   "107",
+   "negotiation",
+   null
+  ],
+  [
+   "108",
+   "negotiation",
+   null
+  ],
+  [
+   "123",
+   "rule",
+   null
+  ],
+  [
+   "125",
+   "negotiation",
+   null
+  ],
+  [
+   "126",
+   "negotiation",
+   null
+  ],
+  [
+   "127",
+   "negotiation",
+   null
+  ],
+  [
+   "132",
+   "rule",
+   null
+  ],
+  [
+   "133",
+   "rule",
+   null
+  ],
+  [
+   "134",
+   "negotiation",
+   null
+  ],
+  [
+   "135",
+   "negotiation",
+   null
+  ],
+  [
+   "137",
+   "rule",
+   null
+  ],
+  [
+   "138",
+   "dispute",
+   2
+  ],
+  [
+   "139",
+   "sanctions",
+   null
+  ],
+  [
+   "150",
+   "dispute",
+   3
+  ],
+  [
+   "151",
+   "rule",
+   null
+  ],
+  [
+   "152",
+   "dispute",
+   3
+  ],
+  [
+   "153",
+   "rule",
+   null
+  ],
+  [
+   "154",
+   "dispute",
+   3
+  ],
+  [
+   "160",
+   "representation",
+   null
+  ],
+  [
+   "161",
+   "representation",
+   null
+  ],
+  [
+   "163",
+   "sanctions",
+   null
+  ],
+  [
+   "164",
+   "negotiation",
+   null
+  ],
+  [
+   "165",
+   "negotiation",
+   null
+  ],
+  [
+   "170",
+   "rule",
+   null
+  ],
+  [
+   "172",
+   "rule",
+   null
+  ],
+  [
+   "175",
+   "rule",
+   null
+  ],
+  [
+   "04",
+   "negotiation",
+   null
+  ],
+  [
+   "14",
+   "rule",
+   null
+  ],
+  [
+   "18",
+   "dispute",
+   4
+  ],
+  [
+   "19",
+   "dispute",
+   4
+  ],
+  [
+   "20",
+   "dispute",
+   4
+  ]
+ ],
+ "_cameo": "GDELT events: [CAMEO code prefix, class, MID hostility level]; the longest matching prefix decides; a code with no row has no class. MID levels: 138x threats 2, 150/152/154 displays 3, 18-20 uses of force 4. GDELT 1.0 codes no war onset, so GDELT events never reach level 5.",
+ "pair": {
+  "contiguity": "filter/cow/contiguity2016.csv: COW Direct Contiguity v3.2, 2016, types 1-4 (land, or up to 150 miles of sea)",
+  "major_powers": "filter/cow/majors2024.csv: COW Major Powers 2024, in tenure at the end of 2024",
+  "rule": "Politically relevant (Lemke and Reed 2001): the item names a major power, or two states contiguous by land or up to 150 miles of sea."
+ }
+}

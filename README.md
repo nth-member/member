@@ -65,6 +65,7 @@ terms change.
 | `granule_by_span_days` | the starting granule for an edge, by its length: day up to 400 days, week up to 1,900, month beyond |
 | `relevance.terms` | what the field is read for |
 | `relevance.weights` | each entry's weight in a granule's reading (1 where absent; empty until set) |
+| `filter` | the geopolitical filter's settings: θ, the classes that pass, `min_hostility`, `pair_gate`, `marks` |
 
 **The relevance terms are the author's.** The author set 25 on 2026-09-26: Sarajevo, Bosnia-Herzegovina,
 Serbia and the Serbs, the Euphrates (with Iraq and Syria), Megiddo and Armageddon, Babylon, Gog and
@@ -118,6 +119,40 @@ Because nearly every event matches some entry, the member reads each entry on it
 
 `member.py` computes the reading for the journal, and `docs/relevance.js` computes it for the page.
 `node tests/fidelity.mjs` checks that the two agree on every micronode the journal walks.
+
+## The geopolitical filter
+
+Since 2026-11-22 an event counts only if it also passes the member's geopolitical filter (`filter/`),
+at the author's word: "classify feeds in terms of geopolitical weight ... by classify I mean filter".
+
+- **Classes.** Six come from the Correlates of War project, each defined by its codebook codes: war
+  (war types 1–9), militarized dispute (MID 5.0: hostility 1–5 and its 21 actions), alignment (formal
+  alliances I/IIa/IIb/III, defense cooperation agreements, IGO membership), diplomatic representation
+  (0/1/2/3/9), territorial change (procedures 1–6) and capability (NMC v7.0, arms technology). Five
+  are marked "not from COW": agreement and negotiation, sanctions and other pressure, internal power
+  (from CAMEO's event codes), holy places and religion (COW's World Religion Data and the author's
+  holy-place entries), and economic statecraft. `filter/classes.json` keeps each class's source, its
+  codes and the words it starts from, each word traced to its codebook.
+- **The weight.** An item i passes when G(i) ≥ θ, its class is among the chosen ones, war and disputes
+  reach `min_hostility` on the MID scale, and, with `pair_gate` set, it is politically relevant (it
+  names a COW major power, or two states contiguous by land or up to 150 miles of sea: Lemke and Reed
+  2001, from COW's Major Powers 2024 and Direct Contiguity v3.2). G = O/(1+O), with
+  O(i) = 4^(2s−1) · Π_w ((p_w+1)/(P+2)) / ((d_w+1)/(D+2)): s is the seed (the item names an entry and
+  carries a word of a class), p_w and d_w count the author's pass and drop marks on items carrying w,
+  P and D all of them. Every factor is a ratio of integers, so Python and JavaScript compute G exactly.
+- **GDELT events** are read through the words of their article's address (85–92% of rows carry at
+  least three), and take their class and hostility from their CAMEO code (`classes.json` "cameo").
+  The day's rows stay the denominator: an entry's share is its passing events per GDELT event.
+- **Settings** are `member.json`'s `filter`: θ, the classes, `min_hostility`, `pair_gate`, and
+  `marks`. With `marks` "seed" the classes' words alone are used; "learned" adds the counts built from
+  the author's marks (`python3 filter/geofilter.py model MARKS OUT`), which are kept off the repos. A
+  change to the filter rebuilds the cache (about 13 minutes).
+- **Along each edge** the journal and the page show, for every relevant day, the entries that drove
+  its reading (the largest terms of its sum) and up to three passing items carrying them: the feed
+  archive's headlines on days it covers, else GDELT's most-carried passing events
+  (`cache/items_daily.jsonl`, `docs/data/items/YEAR.json`).
+- `node tests/geofilter_fidelity.mjs` checks `filter/geofilter.js` against `filter/geofilter.py` on
+  every headline in the feed archive, four ways.
 
 ## Rules
 

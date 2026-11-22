@@ -47,10 +47,15 @@ sys.path.insert(0, str(REVOTT))
 from revott.core import NSUKKA  # noqa: E402
 from revott.introspect import introspect, render  # noqa: E402
 from revott.sfo import SFO  # noqa: E402
+sys.path.insert(0, str(HERE / "filter"))
+import geofilter as GF  # noqa: E402
 
 CORPUS = Path(os.environ.get("CORPUS", Path.home() / "gdelt_raw_1979_2026")) / "files"
 FIELD = REVOTT / "gdelt" / "gdelt_daily_1979_2026.csv"
 CACHE = HERE / "cache" / "relevance_daily.csv"
+ITEMS = HERE / "cache" / "items_daily.jsonl"     # each day's most-carried passing events, for the journal and the page
+STAMPS_DAYS = Path(os.environ.get("REVOTT_STAMPS", Path.home() / "revott-stamps")) / "docs" / "data" / "days"
+FEED_ERA = date(2026, 9, 28)                      # the feed archive's first day (05:32 Nsukka)
 JOURNAL = HERE / "docs" / "journal"
 ORDERS = json.loads((HERE / "member.json").read_text())
 REL = ORDERS["relevance"]
@@ -64,7 +69,11 @@ PATTERN = re.compile(r"\b(" + "|".join(re.escape(w) for w in sorted(WORD, key=le
 # Each entry's weight in a granule's reading: 1 unless member.json's relevance.weights sets it.
 # Weights act on the counts, so changing them needs no rebuild of the cache.
 WEIGHTS = [float(REL.get("weights", {}).get(e, 1)) for e in ENTRIES]
-DEFHASH = hashlib.sha1((json.dumps(REL["terms"], sort_keys=True) + "v3").encode()).hexdigest()[:10]
+# The geopolitical filter (filter/): an event counts only if it passes. Its definition is part of the
+# cache's, so a change to the classes or to member.json's "filter" rebuilds the cache.
+FILTER = GF.load()
+DEFHASH = hashlib.sha1((json.dumps(REL["terms"], sort_keys=True) + "v4" + GF.definition()).encode()).hexdigest()[:10]
+KEEP = 60                                         # passing events kept per day, by articles
 
 
 def entry_of(text: str) -> int:
@@ -82,17 +91,20 @@ def label(k: int) -> str:
 
 
 def read_day(day: str):
-    """Stream one daily archive: rows, rows any entry matched, those in material conflict,
-    the day's most-carried of them, and the events each entry matched. None if there is
-    no archive. An event counts once for every entry whose words it carries."""
+    """Stream one daily archive: rows, rows any entry matched, those that also pass the geopolitical
+    filter, those of them in material conflict, the day's most-carried passing events, and the passing
+    events each entry matched. None if there is no archive. An event counts once for every entry whose
+    words it carries, and only if it passes: its article's address reaches theta, its CAMEO code's class
+    is among the chosen ones, and so on (filter/geofilter.py)."""
     f = CORPUS / f"{day.replace('-', '')}.export.CSV.zip"
     if not f.exists():
         return None
-    rows = hits = hits4 = 0
+    rows = matched = hits = hits4 = 0
     counts = [0] * len(ENTRIES)
-    top = []
+    best = {}       # article address -> its most-carried passing event
     memo = {}       # a field's entries, read once per distinct value; no word spans a tab, so the
                     # union over the five fields is what the joined fields would give
+    umemo, cmemo, pmemo = {}, {}, {}
 
     def entries_in(field):
         r = memo.get(field)
@@ -110,16 +122,36 @@ def read_day(day: str):
                  | entries_in(c[50]))
         if not found:
             continue
+        matched += 1
+        url = c[57] if len(c) > 57 else ""
+        ok = umemo.get(url)
+        if ok is None:
+            ok = umemo[url] = FILTER.url_ok(url)
+        if not ok:
+            continue
+        ch = cmemo.get(c[26])
+        if ch is None:
+            ch = cmemo[c[26]] = FILTER.cameo_class(c[26])
+        if not FILTER.class_ok(*ch):
+            continue
+        if FILTER.pair_gate:
+            pr = pmemo.get(found)
+            if pr is None:
+                pr = pmemo[found] = FILTER.relevant_pair([ENTRIES[k] for k in found])
+            if not pr:
+                continue
         hits += 1
         for k in found:
             counts[k] += 1
         if c[29] == "4":
             hits4 += 1
-        top.append((int(c[33] or 0), c[28], c[26], c[6], c[16], c[50],
-                    c[57] if len(c) > 57 else ""))
+        n = int(c[33] or 0)
+        b = best.get(url)
+        if b is None or n > b[0]:
+            best[url] = (n, c[28], c[26], ch[0], ch[1], c[6], c[16], c[50], url, sorted(found))
     p.wait()
-    top.sort(key=lambda t: -t[0])
-    return day, rows, hits, hits4, top[:12], counts
+    top = sorted(best.values(), key=lambda t: (-t[0], t[8]))[:KEEP]
+    return day, rows, matched, hits, hits4, top, counts
 
 
 def load_cache():
@@ -132,27 +164,47 @@ def load_cache():
     return out
 
 
+def load_items() -> dict:
+    """Each day's most-carried passing events: [articles, root, code, class, hostility, actor 1, actor 2,
+    place, address, entries]."""
+    out = {}
+    if ITEMS.exists():
+        for line in open(ITEMS):
+            r = json.loads(line)
+            if r["def"] == DEFHASH:
+                out[r["date"]] = r["items"]
+    return out
+
+
+def lead_of(t) -> str:
+    n, root, code, cls, h, a1, a2, place, url, _ = t
+    return f"{n} art · {cls}{'' if h is None else ' ' + str(h)} · root {root} · {a1 or '—'} / {a2 or '—'} · {place or '—'}"
+
+
 def ensure(days, cache):
     need = [d for d in days if d not in cache]
     if not need:
         return cache
-    print(f"  reading {len(need)} days against the relevance terms …", file=sys.stderr)
+    print(f"  reading {len(need)} days against the relevance terms and the geopolitical filter …", file=sys.stderr)
+    items = load_items()
     with ProcessPoolExecutor(max_workers=14) as ex:
         for res in ex.map(read_day, need):
             if res is None:
                 continue
-            d, rows, hits, hits4, top, counts = res
-            lead = ""
-            if top:
-                n, root, code, a1, a2, place, url = top[0]
-                lead = f"{n} art · root {root} · {a1 or '—'} / {a2 or '—'} · {place or '—'}"
-            cache[d] = dict(date=d, rows=rows, hits=hits, hits4=hits4, lead=lead,
+            d, rows, matched, hits, hits4, top, counts = res
+            cache[d] = dict(date=d, rows=rows, matched=matched, hits=hits, hits4=hits4,
+                            lead=lead_of(top[0]) if top else "",
                             counts=" ".join(map(str, counts)), n=counts, **{"def": DEFHASH})
+            items[d] = [list(t) for t in top]
     with open(CACHE, "w", newline="") as fh:
-        w = csv.DictWriter(fh, ["date", "rows", "hits", "hits4", "lead", "counts", "def"],
+        w = csv.DictWriter(fh, ["date", "rows", "matched", "hits", "hits4", "lead", "counts", "def"],
                            extrasaction="ignore")
         w.writeheader()
         w.writerows(cache[d] for d in sorted(cache))
+    with open(ITEMS, "w") as fh:
+        for d in sorted(items):
+            if d in cache:
+                fh.write(json.dumps({"date": d, "def": DEFHASH, "items": items[d]}, ensure_ascii=False) + "\n")
     return cache
 
 
@@ -243,10 +295,79 @@ def rose(w, n=5):
     return ", ".join(f"{label(k)} p{w['p'][k]:.0f}" for k in w["rose"][:n]) or "no entry at the cut"
 
 
+def drove(w, ref, n=3) -> list[int]:
+    """The entries that drove a granule's reading: the largest terms of its sum, each entry's weighted
+    excess over its own median share."""
+    terms = []
+    for k, s in enumerate(w["shares"]):
+        e = ref[0][k]
+        m = (e[(len(e) - 1) // 2] + e[len(e) // 2]) / 2 if e else 0.0
+        c = WEIGHTS[k] * max(0.0, s - m)
+        if c > 0:
+            terms.append((c, k))
+    terms.sort(key=lambda t: (-t[0], t[1]))
+    return [k for _, k in terms[:n]]
+
+
+_FEEDS = {}
+
+
+def feed_items(day: str) -> list[tuple]:
+    """The feed archive's headlines for a Nsukka day that pass the filter: (ms, source, headline, link,
+    class, hostility, entries named)."""
+    if day not in _FEEDS:
+        out, seen = [], set()
+        f = STAMPS_DAYS / f"{day}.json"
+        for it in (json.load(open(f)) if f.exists() else []):
+            if it[1] != "f" or not it[3] or it[4] in seen:
+                continue
+            seen.add(it[4])
+            r = FILTER.read(it[3])
+            if r["pass"]:
+                out.append((it[0], it[2], it[3], it[4], r["class"], r["h"], r["entries"]))
+        _FEEDS[day] = out
+    return _FEEDS[day]
+
+
+def day_items(day: str, keys: list[int], items: dict, n: int = 3) -> list[tuple]:
+    """The passing items of the entries that drove a day's reading: on days the feed archive covers, its
+    headlines naming them, in the order of the entries; else GDELT's most-carried passing events
+    carrying them, one per story. Each is (class, hostility, headline, link, what carried it)."""
+    ids = [ENTRIES[k] for k in keys]
+    if date.fromisoformat(day) >= FEED_ERA:
+        fs = [x for x in feed_items(day) if set(x[6]) & set(ids)]
+        fs.sort(key=lambda x: (min(ids.index(e) for e in x[6] if e in ids), x[0]))
+        if fs:
+            return [(cls, h, title, url, src) for _ms, src, title, url, cls, h, _e in fs[:n]]
+    out, seen = [], set()
+    for t in items.get(day, []):
+        if set(t[9]) & set(keys):
+            title = " ".join(GF.url_tokens(t[8])) or t[8]
+            if title in seen:
+                continue
+            seen.add(title)
+            out.append((t[3], t[4], title, t[8], f"{t[0]} art"))
+            if len(out) == n:
+                break
+    return out
+
+
+def item_lines(cache, dw, refs, items, pad: str) -> list[str]:
+    keys = drove(dw, refs[1] if 1 in refs else refs.setdefault(1, reference(cache, 1)))
+    if not keys:
+        return []
+    out = [f"{pad}- drove it: " + ", ".join(label(k) for k in keys)]
+    for cls, h, title, url, src in day_items(dw["start"].isoformat(), keys, items):
+        tag = cls + ("" if h is None else f" {h}")
+        title = title.replace("[", "(").replace("]", ")")
+        out.append(f"{pad}- **{tag}** · {title} — {src} · [link]({url})")
+    return out
+
+
 def micronodes(cache, start: date, stop: date, g: str, cut: float, refs, depth=0):
     """Walk [start, stop] in granules of g; judge each; refine those deemed relevant."""
     width = GRAN[g]
-    ref = refs.setdefault(width, reference(cache, width))
+    ref = refs[width] if width in refs else refs.setdefault(width, reference(cache, width))
     out, d0 = [], start
     while d0 <= stop:
         w = judge(window(cache, d0, min(width, (stop - d0).days + 1)), ref, cut)
@@ -270,7 +391,7 @@ def relevant_days(nodes):
     return out
 
 
-def edge_micronode_lines(cache, e, day: date, refs) -> list[str]:
+def edge_micronode_lines(cache, e, day: date, refs, items) -> list[str]:
     start = max(e.start.date(), date(2013, 4, 1))
     span = (e.end - e.start).total_seconds() / 86400
     g = edge_granule(span)
@@ -297,12 +418,10 @@ def edge_micronode_lines(cache, e, day: date, refs) -> list[str]:
     for w in sorted(rel, key=lambda w: -w["pct"])[:6]:
         L.append(f"    - {g} from {w['start']}: percentile {w['pct']:.0f} — rose: {rose(w)}")
         for dd in sorted(relevant_days([w]) if g != "day" else [], key=lambda d: -d["pct"])[:3]:
-            lead = cache[dd["start"].isoformat()].get("lead", "")
-            L.append(f"      - day {dd['start']}: percentile {dd['pct']:.0f} — rose: {rose(dd, 3)} — {lead}")
+            L.append(f"      - day {dd['start']}: percentile {dd['pct']:.0f} — rose: {rose(dd, 3)}")
+            L.extend(item_lines(cache, dd, refs, items, "        "))
         if g == "day":
-            lead = cache.get(w["start"].isoformat(), {}).get("lead", "")
-            if lead:
-                L.append(f"      - {lead}")
+            L.extend(item_lines(cache, w, refs, items, "      "))
     return L
 
 
@@ -337,9 +456,13 @@ def main():
     span_days = [(earliest + timedelta(days=i)).isoformat()
                  for i in range((D - earliest).days + 1)]
     cache = ensure(sorted(set(base_days) | set(span_days)), load_cache())
+    items = load_items()
+    fs = ORDERS["filter"]
     lines = [f"# {day} — the member's entry", ""]
     lines.append(f"*Written {datetime.now(NSUKKA):%Y-%m-%d %H:%M} Nsukka, unprompted, after the refresh. "
-                 f"Relevance definition `{DEFHASH}` — {REL['_status']}*")
+                 f"Relevance definition `{DEFHASH}` — {REL['_status']} Geopolitical filter `{GF.definition()}`: "
+                 f"theta {fs['theta']}, {len(fs['classes'])} classes, hostility at least {fs['min_hostility']}, "
+                 f"pair gate {'on' if fs['pair_gate'] else 'off'}, {'learned from the author' + chr(39) + 's marks' if fs['marks'] == 'learned' else 'the classes' + chr(39) + ' words only'}.*")
     lines.append("")
 
     # 1. where each instance is
@@ -386,7 +509,7 @@ def main():
                              f"it differs only in its end: {sfo.keys[e.target].reading}")
                 continue
             walked[key] = e.target
-            lines.extend(edge_micronode_lines(cache, e, D, refs))
+            lines.extend(edge_micronode_lines(cache, e, D, refs, items))
 
     # 3. the field
     lines.append("")
@@ -396,7 +519,7 @@ def main():
         lines.append(f"- {day}: **NULL** — GDELT published no archive. Not a quiet day; not zero.")
     else:
         today = read_day(day)
-        _, rows, hits, hits4, top, _counts = today
+        _, rows, matched, hits, hits4, top, _counts = today
         cut = ORDERS["relevant_percentile"]
         dw = judge(window(cache, D, 1), refs.setdefault(1, reference(cache, 1)), cut)
         hist4 = [int(c["hits4"]) / max(1, int(c["hits"])) for d, c in cache.items()
@@ -406,7 +529,9 @@ def main():
         z = f["z"] or "—"
         lines.append(f"- All of GDELT: {int(f['n_events']):,} events, z = {z} "
                      "(z is provisional this close to the end of the series).")
-        lines.append(f"- Matched by any entry: {hits:,} events = {share:.2%} of the day.")
+        lines.append(f"- Matched by any entry: {matched:,} events = {matched / rows:.2%} of the day.")
+        lines.append(f"- Passing the geopolitical filter as well: {hits:,} events = {share:.2%} of the day, "
+                     f"{hits / matched if matched else 0:.1%} of those matched. Only these are counted below.")
         lines.append(f"- **The day's reading** — the sum of the {len(ENTRIES)} entries' shares above their own "
                      f"median day (an event matching several entries counts for each) — is {dw['index']:.2%}: "
                      f"percentile **{dw['pct']:.0f}** "
@@ -414,16 +539,16 @@ def main():
         lines.append(f"- **Entries that rose** (at or above the {cut:g}th percentile of their own history): "
                      + (", ".join(f"{label(k)} {dw['n'][k]:,} events, p{dw['p'][k]:.0f}" for k in dw["rose"][:12])
                         or "none") + (f"; {len(dw['rose']) - 12} more" if len(dw["rose"]) > 12 else "") + ".")
-        lines.append(f"- Of the matched events, material conflict (CAMEO roots 15–20): {hits4:,} = {share4:.1%} — "
+        lines.append(f"- Of the passing events, material conflict (CAMEO roots 15–20): {hits4:,} = {share4:.1%} — "
                      f"percentile **{pct(hist4, share4):.0f}**.")
         lines.append("")
-        lines.append("Most-carried relevant events:")
+        lines.append("Most-carried passing events:")
         lines.append("")
-        lines.append("| articles | root | code | actor 1 | actor 2 | place | source |")
-        lines.append("|---:|---|---|---|---|---|---|")
-        for n, root, code, a1, a2, place, url in top:
+        lines.append("| articles | class | root | code | actor 1 | actor 2 | place | source |")
+        lines.append("|---:|---|---|---|---|---|---|---|")
+        for n, root, code, cls, h, a1, a2, place, url, _found in top[:12]:
             src = f"[link]({url})" if url.startswith("http") else ""
-            lines.append(f"| {n} | {root} | {code} | {a1} | {a2} | {place} | {src} |")
+            lines.append(f"| {n} | {cls}{'' if h is None else ' ' + str(h)} | {root} | {code} | {a1} | {a2} | {place} | {src} |")
 
     # 4. announcements
     lines.append("")
@@ -435,6 +560,8 @@ def main():
     lines.append("")
     lines.append("## 5. Standing limits")
     lines.append("- The field is read only for the author's relevance terms in `member.json`; everything else in GDELT is left unread.")
+    lines.append("- Only events passing the geopolitical filter are counted (`filter/classes.json`; settings in `member.json`'s filter). "
+                 "A GDELT event is read through the words of its article's address and classed by its CAMEO code.")
     lines.append("- Percentiles are against the member's own history; they are readings, not significance.")
     lines.append("- GDELT 1.0 floors the granule at one day; micronodes below a day need GDELT 2.0's 15-minute feed.")
     lines.append("- Micronodes before 2013-04-01 are not yet walked.")
