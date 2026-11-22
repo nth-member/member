@@ -131,8 +131,15 @@ at the author's word: "classify feeds in terms of geopolitical weight ... by cla
   (0/1/2/3/9), territorial change (procedures 1–6) and capability (NMC v7.0, arms technology). Five
   are marked "not from COW": agreement and negotiation, sanctions and other pressure, internal power
   (from CAMEO's event codes), holy places and religion (COW's World Religion Data and the author's
-  holy-place entries), and economic statecraft. `filter/classes.json` keeps each class's source, its
-  codes and the words it starts from, each word traced to its codebook.
+  holy-place entries), and economic statecraft. A twelfth, **AI and computing** (2026-11-22, at the
+  author's word), takes its words from the author's own computing ledger, the Whizz Kids Witness's eight
+  design-story chapters, and from the terms that measured AI news in the feeds; it has two sub-classes,
+  **AI alignment** and **recursive self-improvement**, whose shorter words count only beside an AI word.
+  Unlike the others, an item of these three passes without naming one of the author's entries, and an
+  item that names no entry can take only one of them. `filter/classes.json` keeps each class's source,
+  its codes and the words it starts from, each word traced to its source.
+- **Words** are read lower case, without accents, and a possessive 's is dropped ("Russia's" reads as
+  "russia"; until 2026-11-22 it did not, and headlines naming a state only in the possessive failed).
 - **The weight.** An item i passes when G(i) ≥ θ, its class is among the chosen ones, war and disputes
   reach `min_hostility` on the MID scale, and, with `pair_gate` set, it is politically relevant (it
   names a COW major power, or two states contiguous by land or up to 150 miles of sea: Lemke and Reed

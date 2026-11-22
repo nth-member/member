@@ -1,5 +1,5 @@
 {
- "_note": "The member's geopolitical filter: its classes, where each comes from, its codes, and the words each class starts from. An item passes when its weight G reaches theta and its class is among the classes chosen in member.json's filter. The six COW classes are defined by the Correlates of War codebooks; the five marked cow:false are not from COW. Words are matched as whole token sequences after lower-casing, removing accents and splitting on anything but letters, digits and apostrophes. The author's pass/drop marks correct the words (see filter/geofilter.py).",
+ "_note": "The member's geopolitical filter: its classes, where each comes from, its codes, and the words each class starts from. An item passes when its weight G reaches theta and its class is among the classes chosen in member.json's filter. The six COW classes are defined by the Correlates of War codebooks; the eight marked cow:false are not from COW. A class with needs_entry false (AI and computing, and its two sub-classes, AI alignment and recursive self-improvement, marked parent: ai) passes without naming one of the author's entries; an item that names no entry can take only such a class. Words are matched as whole token sequences after lower-casing, removing accents and splitting on anything but letters, digits and apostrophes. The author's pass/drop marks correct the words (see filter/geofilter.py).",
  "version": "2026-11-22",
  "seed_odds": 4,
  "class_seed_count": 2,
@@ -13,6 +13,9 @@
   "negotiation",
   "rule",
   "religion",
+  "ai-alignment",
+  "ai-self-improvement",
+  "ai",
   "capability",
   "economy"
  ],
@@ -933,6 +936,220 @@
       "economic assistance"
      ],
      "src": "CAMEO 061, 0211, 0311, 1011, 1211; 071, 0231, 0331, 1031, 1221; 1621"
+    }
+   ]
+  },
+  {
+   "id": "ai",
+   "name": "AI and computing",
+   "cow": false,
+   "needs_entry": false,
+   "source": "Not from COW, and from no codebook: the author's own computing ledger, the Whizz Kids Witness's design story in eight chapters, and the terms that measured AI news in the feeds on 2026-11-22. Added at the author's word, 2026-11-22.",
+   "codes": "The ledger's chapters: 1 personal machines and common connections (1974-1988); 2 the Internet becomes a shared Web (1989-2003); 3 social, mobile and cloud ecosystems (2003-2011); 4 learning and perceptual building blocks (2011-2022); 5 perception becomes a developer platform (2015-2022); 6 conversation becomes delegated action (2022-2026); 7 competition over agents and infrastructure, the Agentic Computing War (2026); 8 future stages toward Super Intelligence (2026 onward; 82.80, 30 December 2037). Unlike the other classes, an item of this one passes without naming one of the author's entries.",
+   "terms": [
+    {
+     "forms": [
+      "ai",
+      "artificial intelligence",
+      "machine intelligence",
+      "generative ai",
+      "machine learning"
+     ],
+     "src": "the author's Whizz Kids ledger (SFO_BB_analog_x_computing_events_enriched.xlsx), design-story chapter 1 and 4 (machine intelligence; learning capabilities); the AI-news terms of 2026-11-22"
+    },
+    {
+     "forms": [
+      "agi",
+      "superintelligence",
+      "super intelligence"
+     ],
+     "src": "the author's Whizz Kids ledger (SFO_BB_analog_x_computing_events_enriched.xlsx), design-story chapter 8: the designated Super Intelligence stage"
+    },
+    {
+     "forms": [
+      "llm",
+      "llms",
+      "large language model",
+      "large language models",
+      "chatbot",
+      "chatbots",
+      "chatgpt"
+     ],
+     "src": "the author's Whizz Kids ledger (SFO_BB_analog_x_computing_events_enriched.xlsx), design-story chapter 6: a conversational interface becomes a way to delegate"
+    },
+    {
+     "forms": [
+      "agentic",
+      "ai agent",
+      "ai agents",
+      "computer use"
+     ],
+     "src": "the author's Whizz Kids ledger (SFO_BB_analog_x_computing_events_enriched.xlsx), design-story chapter 6 and 7: delegated action; competition over agents"
+    },
+    {
+     "forms": [
+      "openai",
+      "anthropic",
+      "deepseek",
+      "nvidia"
+     ],
+     "src": "the AI-news terms of 2026-11-22: the makers of models and of their hardware"
+    },
+    {
+     "forms": [
+      "chip",
+      "chips",
+      "chipmaker",
+      "chipmakers",
+      "microchip",
+      "microchips",
+      "semiconductor",
+      "semiconductors",
+      "gpu",
+      "gpus",
+      "data center",
+      "data centers",
+      "data centre",
+      "data centres"
+     ],
+     "src": "the author's Whizz Kids ledger (SFO_BB_analog_x_computing_events_enriched.xlsx), design-story chapter 7: hardware supply"
+    },
+    {
+     "forms": [
+      "supercomputer",
+      "supercomputers",
+      "quantum computing",
+      "cloud computing",
+      "computing"
+     ],
+     "src": "the author's Whizz Kids ledger (SFO_BB_analog_x_computing_events_enriched.xlsx), design-story chapter 1 and 3: computing; cloud ecosystems"
+    },
+    {
+     "forms": [
+      "cyberattack",
+      "cyberattacks",
+      "cyber attack",
+      "cyber attacks",
+      "cybersecurity",
+      "hackers",
+      "deepfake",
+      "deepfakes"
+     ],
+     "src": "the author's Whizz Kids ledger (SFO_BB_analog_x_computing_events_enriched.xlsx), design-story chapter 7: security; 3: privacy and control as design problems"
+    }
+   ]
+  },
+  {
+   "id": "ai-alignment",
+   "name": "AI alignment",
+   "cow": false,
+   "needs_entry": false,
+   "parent": "ai",
+   "source": "Not from COW: the author's sub-classifier of AI and computing (2026-11-22: \"alignment and recursive self improvement should be sub-classifiers\"). Its words are the author's term and its forms; the bare word counts only beside an AI word, so that COW's alignment (alliances) keeps its own sense.",
+   "codes": "Within AI and computing: whether AI systems pursue what their makers and users intend, and the safety work toward it.",
+   "terms": [
+    {
+     "forms": [
+      "ai alignment",
+      "ai safety",
+      "alignment research",
+      "superalignment"
+     ],
+     "src": "the author's term, as a phrase"
+    },
+    {
+     "forms": [
+      "alignment",
+      "aligned",
+      "misaligned",
+      "misalignment",
+      "safety"
+     ],
+     "needs": [
+      "ai",
+      "artificial intelligence",
+      "machine intelligence",
+      "agi",
+      "superintelligence",
+      "super intelligence",
+      "llm",
+      "llms",
+      "large language model",
+      "large language models",
+      "model",
+      "models",
+      "chatbot",
+      "chatbots",
+      "openai",
+      "anthropic",
+      "deepseek",
+      "agentic",
+      "ai agent",
+      "ai agents",
+      "machine learning",
+      "ai system",
+      "ai systems",
+      "ai lab",
+      "ai labs"
+     ],
+     "src": "the author's term and its forms, beside an AI word"
+    }
+   ]
+  },
+  {
+   "id": "ai-self-improvement",
+   "name": "Recursive self-improvement",
+   "cow": false,
+   "needs_entry": false,
+   "parent": "ai",
+   "source": "Not from COW: the author's sub-classifier of AI and computing (2026-11-22: \"alignment and recursive self improvement should be sub-classifiers\"). Its words are the author's term and its forms; the shorter forms count only beside an AI word.",
+   "codes": "Within AI and computing: AI systems that improve themselves, or the research that builds the next systems, in a loop.",
+   "terms": [
+    {
+     "forms": [
+      "recursive self improvement",
+      "recursively self improving",
+      "intelligence explosion"
+     ],
+     "src": "the author's term, as a phrase"
+    },
+    {
+     "forms": [
+      "self improving",
+      "self improvement",
+      "improve itself",
+      "improves itself",
+      "improving itself",
+      "automated ai research"
+     ],
+     "needs": [
+      "ai",
+      "artificial intelligence",
+      "machine intelligence",
+      "agi",
+      "superintelligence",
+      "super intelligence",
+      "llm",
+      "llms",
+      "large language model",
+      "large language models",
+      "model",
+      "models",
+      "chatbot",
+      "chatbots",
+      "openai",
+      "anthropic",
+      "deepseek",
+      "agentic",
+      "ai agent",
+      "ai agents",
+      "machine learning",
+      "ai system",
+      "ai systems",
+      "ai lab",
+      "ai labs"
+     ],
+     "src": "the author's term and its forms, beside an AI word"
     }
    ]
   }

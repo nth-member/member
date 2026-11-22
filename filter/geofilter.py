@@ -8,7 +8,8 @@
 An item is a headline, or a GDELT event read through the words of its article's address. For each item i:
 
     s(i)  the seed: 1 if i names one of the author's relevance entries and carries a word of any class
-          (filter/classes.json), else 0. A GDELT event already carries an entry, through its own fields.
+          (filter/classes.json), or carries a word of a class that needs no entry (needs_entry false: AI and
+          computing), else 0. A GDELT event already carries an entry, through its own fields.
     O(i)  its odds: seed_odds ** (2 s(i) - 1) times, for every distinct word w of i that the marks have
           counted, ((p_w + 1) / (P + 2)) / ((d_w + 1) / (D + 2)): p_w and d_w count the author's pass and
           drop marks on items carrying w, P and D all the pass and drop marks (naive Bayes on the words
@@ -45,10 +46,17 @@ CLASSES = json.loads((HERE / "classes.json").read_text())
 
 def tokens(text: str) -> list[str]:
     """Lower case, accents removed (every mark, Unicode category M, after NFKD), split on anything but
-    letters, digits and apostrophes; geofilter.js does the same."""
+    letters, digits and apostrophes, and a possessive 's dropped; geofilter.js does the same."""
     t = unicodedata.normalize("NFKD", text.replace("’", "'").replace("‘", "'").lower())
     t = "".join(ch for ch in t if unicodedata.category(ch)[0] != "M")
-    return [w.strip("'") for w in re.split(r"[^a-z0-9']+", t) if w.strip("'")]
+    out = []
+    for w in re.split(r"[^a-z0-9']+", t):
+        w = w.strip("'")
+        if w.endswith("'s"):          # the possessive: "Russia's" reads as "russia"
+            w = w[:-2]
+        if w:
+            out.append(w)
+    return out
 
 
 GENERIC = {"www", "com", "org", "net", "html", "htm", "php", "aspx", "asp", "index", "amp"}
@@ -92,6 +100,7 @@ class Filter:
             for t in c["terms"]:
                 self.terms.append((c["id"], [pid(f) for f in t["forms"]], t.get("h"), [pid(f) for f in t.get("needs", [])]))
         self.cameo = [(p, cls, h) for p, cls, h in CLASSES["cameo"]]
+        self.free = {c["id"] for c in CLASSES["classes"] if c.get("needs_entry") is False}   # pass without an entry
         # the author's relevance entries, longest phrase first
         terms = orders["relevance"]["terms"]
         self.entry_phrases = sorted(((pid(w), e) for e, v in terms.items() for w in v.split("|")),
@@ -186,7 +195,9 @@ class Filter:
         occ = self.occurrences(toks)
         names = list(entries) if gdelt else self.named_entries(toks, occ)
         terms = self.matched_terms(toks, occ)
-        seed = 1 if (names and terms) else 0
+        if not names:                     # with no entry named, only a class that needs none may hold the item
+            terms = [t for t in terms if t[0] in self.free]
+        seed = 1 if terms else 0
         g = self.weight(toks, seed)
         if gdelt:
             cls, h = self.cameo_class(cameo)

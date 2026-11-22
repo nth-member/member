@@ -1,7 +1,8 @@
 /* The member's geopolitical filter, read as filter/geofilter.py reads it (tests/geofilter_fidelity.mjs
    checks the two against each other on every headline in the feed archive).
 
-   An item passes when its weight G reaches theta, its class is among the chosen classes, war and
+   An item is seeded when it names one of the author's entries and carries a class word, or carries a word of a
+   class that needs no entry (AI and computing). It passes when its weight G reaches theta, its class is among the chosen classes, war and
    disputes reach min_hostility on the MID scale, and, with pair_gate set, it is politically relevant.
    G = O / (1 + O), with O = seed_odds^(2s - 1) times ((p_w + 1) / (P + 2)) / ((d_w + 1) / (D + 2)) for each
    distinct word w the author's marks have counted: every factor a ratio of integers, kept exact here with
@@ -11,12 +12,14 @@
 
   const GENERIC = new Set(["www", "com", "org", "net", "html", "htm", "php", "aspx", "asp", "index", "amp"]);
 
-  // lower case, every mark (Unicode category M) removed after NFKD, split on anything but a-z, 0-9 and '
+  // lower case, every mark (Unicode category M) removed after NFKD, split on anything but a-z, 0-9 and ',
+  // and a possessive 's dropped
   function tokens(text) {
     const t = String(text).replace(/[’‘]/g, "'").toLowerCase().normalize("NFKD").replace(/\p{M}/gu, "");
     const out = [];
     for (const w of t.split(/[^a-z0-9']+/)) {
-      const s = w.replace(/^'+|'+$/g, "");
+      let s = w.replace(/^'+|'+$/g, "");
+      if (s.endsWith("'s")) s = s.slice(0, -2);     // the possessive: "Russia's" reads as "russia"
       if (s) out.push(s);
     }
     return out;
@@ -51,6 +54,7 @@
     const entryPhrases = [];
     for (const [e, v] of Object.entries(O.relevance.terms)) for (const w of v.split("|")) entryPhrases.push([tokens(w), e]);
     entryPhrases.sort((a, b) => (b[0].length - a[0].length) || cmpTuple(a[0], b[0]));
+    const free = new Set(C.classes.filter(c => c.needs_entry === false).map(c => c.id));   // pass without an entry
     const entries = cfg.entries, majors = new Set(cfg.gates.majors);
     const contig = new Set(cfg.gates.contiguous.map(([a, b]) => a + "," + b));
 
@@ -116,8 +120,10 @@
       return order.find(c => score[c] === best);
     }
     function read(text) {
-      const toks = tokens(text), names = namedEntries(toks), ts = matchedTerms(toks);
-      const seed = names.length && ts.length ? 1 : 0;
+      const toks = tokens(text), names = namedEntries(toks);
+      let ts = matchedTerms(toks);
+      if (!names.length) ts = ts.filter(t => free.has(t[0]));   // with no entry named, only a class that needs none may hold the item
+      const seed = ts.length ? 1 : 0;
       const [gn, gd] = weight(toks, seed);
       const cls = classify(toks, ts);
       const hs = ts.filter(t => t[0] === cls && t[1] != null).map(t => t[1]);

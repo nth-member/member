@@ -232,7 +232,7 @@
   "filter": {
     "_note": "The geopolitical filter (filter/classes.json, filter/geofilter.py). An event or headline counts only if it passes: its weight G reaches theta, its class is among these classes, war and disputes reach min_hostility on the MID scale, and, with pair_gate set, it is politically relevant (a COW major power, or two contiguous states). marks 'seed' reads with the classes' words only; 'learned' also uses the counts built from the author's marks (model, kept off the repos). A change here rebuilds the member's cache.",
     "theta": "1/2",
-    "classes": ["war", "dispute", "alignment", "representation", "territory", "capability", "negotiation", "sanctions", "rule", "religion", "economy"],
+    "classes": ["war", "dispute", "alignment", "representation", "territory", "capability", "negotiation", "sanctions", "rule", "religion", "economy", "ai", "ai-alignment", "ai-self-improvement"],
     "min_hostility": 2,
     "pair_gate": false,
     "marks": "seed",
