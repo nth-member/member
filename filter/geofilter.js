@@ -48,45 +48,61 @@
     const theta = frac(S.theta), chosen = new Set(S.classes), minH = +S.min_hostility, pairGate = !!S.pair_gate;
     const order = C.precedence, odds = BigInt(C.seed_odds), pi = +C.class_seed_count;
     const model = cfg.model || { p: {}, d: {}, tags: {} };
+    // every phrase (class terms, the terms they need, the entries' words) gets an id; an index by first word
+    // finds them in one pass over an item's words, as filter/geofilter.py does
+    const phrases = [], ids = new Map(), first = new Map();
+    const pid = form => {
+      const ph = tokens(form), key = ph.join(" ");
+      if (!ids.has(key)) {
+        ids.set(key, phrases.length); phrases.push(ph);
+        if (ph.length) { if (!first.has(ph[0])) first.set(ph[0], []); first.get(ph[0]).push(ids.get(key)); }
+      }
+      return ids.get(key);
+    };
     const terms = [];
     for (const c of C.classes) for (const t of c.terms)
-      terms.push([c.id, t.forms.map(tokens), t.h == null ? null : t.h, (t.needs || []).map(tokens)]);
+      terms.push([c.id, t.forms.map(pid), t.h == null ? null : t.h, (t.needs || []).map(pid)]);
     const entryPhrases = [];
-    for (const [e, v] of Object.entries(O.relevance.terms)) for (const w of v.split("|")) entryPhrases.push([tokens(w), e]);
-    entryPhrases.sort((a, b) => (b[0].length - a[0].length) || cmpTuple(a[0], b[0]));
+    for (const [e, v] of Object.entries(O.relevance.terms)) for (const w of v.split("|")) entryPhrases.push([pid(w), e]);
+    entryPhrases.sort((a, b) => (phrases[b[0]].length - phrases[a[0]].length) || cmpTuple(phrases[a[0]], phrases[b[0]]));
     const free = new Set(C.classes.filter(c => c.needs_entry === false).map(c => c.id));   // pass without an entry
     const entries = cfg.entries, majors = new Set(cfg.gates.majors);
     const contig = new Set(cfg.gates.contiguous.map(([a, b]) => a + "," + b));
 
-    function has(toks, ph) {
-      const n = ph.length;
-      outer: for (let i = 0; i + n <= toks.length; i++) {
-        for (let j = 0; j < n; j++) if (toks[i + j] !== ph[j]) continue outer;
-        return true;
-      }
-      return false;
-    }
-    function namedEntries(toks) {
-      const used = new Array(toks.length).fill(false), found = [];
-      for (const [ph, e] of entryPhrases) {
-        const n = ph.length;
-        for (let i = 0; i + n <= toks.length; i++) {
+    function occurrences(toks) {          // phrase id -> its start positions, in order
+      const occ = new Map();
+      for (let i = 0; i < toks.length; i++) {
+        const cands = first.get(toks[i]);
+        if (!cands) continue;
+        for (const k of cands) {
+          const ph = phrases[k];
+          if (i + ph.length > toks.length) continue;
           let eq = true;
-          for (let j = 0; j < n; j++) if (toks[i + j] !== ph[j]) { eq = false; break; }
-          if (!eq) continue;
-          let free = true;
-          for (let j = i; j < i + n; j++) if (used[j]) { free = false; break; }
-          if (!free) continue;
+          for (let j = 1; j < ph.length; j++) if (toks[i + j] !== ph[j]) { eq = false; break; }
+          if (eq) { if (!occ.has(k)) occ.set(k, []); occ.get(k).push(i); }
+        }
+      }
+      return occ;
+    }
+    function namedEntries(toks, occ) {
+      const used = new Array(toks.length).fill(false), found = [];
+      for (const [k, e] of entryPhrases) {
+        const n = phrases[k].length, at = occ.get(k);
+        if (!at) continue;
+        for (const i of at) {
+          let free_ = true;
+          for (let j = i; j < i + n; j++) if (used[j]) { free_ = false; break; }
+          if (!free_) continue;
           for (let j = i; j < i + n; j++) used[j] = true;
           if (!found.includes(e)) found.push(e);
         }
       }
       return found;
     }
-    function matchedTerms(toks) {
+    function matchedTerms(occ) {
       const out = [];
       for (const [cls, forms, h, needs] of terms)
-        if (forms.some(f => has(toks, f)) && (!needs.length || needs.some(f => has(toks, f)))) out.push([cls, h]);
+        if (forms.some(f => occ.has(f)) && (!needs.length || needs.some(f => occ.has(f)))) out.push([cls, h]);
       return out;
     }
     function relevantPair(names) {
@@ -120,8 +136,8 @@
       return order.find(c => score[c] === best);
     }
     function read(text) {
-      const toks = tokens(text), names = namedEntries(toks);
-      let ts = matchedTerms(toks);
+      const toks = tokens(text), occ = occurrences(toks), names = namedEntries(toks, occ);
+      let ts = matchedTerms(occ);
       if (!names.length) ts = ts.filter(t => free.has(t[0]));   // with no entry named, only a class that needs none may hold the item
       const seed = ts.length ? 1 : 0;
       const [gn, gd] = weight(toks, seed);
